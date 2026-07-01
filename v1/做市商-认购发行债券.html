@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HK RFQ Market - 认购发行债券</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-blue-hover: #2563eb;
+        --accent-purple: #8b5cf6;
+        --trade-buy: #10b981; /* Green */
+        --trade-sell: #ef4444; /* Red */
+        --border-color: #1e293b;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --status-pending: #f59e0b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        letter-spacing: 1px;
+      }
+
+      /* Typography */
+      h1,
+      h2,
+      h3 {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Layout */
+      .sidebar {
+        width: 240px;
+        min-width: 240px;
+        flex-shrink: 0;
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+      }
+
+      .logo {
+        padding: 0 24px 24px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent-blue);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-item {
+        padding: 12px 24px;
+        color: var(--text-muted);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        color: var(--text-main);
+        background-color: rgba(59, 130, 246, 0.1);
+        border-right: 3px solid var(--accent-blue);
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .header {
+        height: 64px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        background-color: rgba(19, 26, 40, 0.8);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .system-status {
+        display: flex;
+        gap: 16px;
+        font-size: 1.1rem;
+        align-items: center;
+      }
+
+      .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .badge.compliance {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+      .badge.web3 {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid var(--accent-purple);
+      }
+      .badge.market {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--accent-blue);
+        border: 1px solid var(--accent-blue);
+      }
+      .badge.pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        border: 1px solid #f59e0b;
+      }
+      .badge.success {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+
+      .dashboard-flex,
+      .dashboard-grid,
+      .dashboard,
+      .dashboard-full {
+        padding: 48px 32px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        max-width: 2400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .grid-2-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      /* Cards */
+      .card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        color: var(--text-main);
+        font-weight: 600;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Form Elements */
+      .form-group {
+        margin-bottom: 24px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .form-control {
+        width: 100%;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        transition: border-color 0.2s;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+      }
+      .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+      }
+      .form-control:disabled {
+        background-color: rgba(0, 0, 0, 0.2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        padding: 14px 20px;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-align: center;
+        letter-spacing: 1px;
+        font-size: 0.875rem;
+      }
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn-trad {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        border: 1px solid var(--accent-blue);
+      }
+      .btn-trad.selected {
+        background-color: var(--accent-blue);
+        color: #fff;
+      }
+      .btn-rwa {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+        border: 1px solid var(--accent-purple);
+      }
+      .btn-rwa.selected {
+        background-color: var(--accent-purple);
+        color: #fff;
+      }
+      .btn-primary {
+        background-color: var(--accent-blue);
+        color: white;
+        width: 100%;
+        margin-top: 16px;
+        font-weight: 600;
+      }
+
+      /* Data Tables */
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      th {
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+        white-space: nowrap;
+      }
+      tr:hover td {
+        background-color: var(--bg-surface-hover);
+      }
+
+      .quote-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .quote-best {
+        color: var(--trade-buy);
+        font-weight: 600;
+      }
+
+      .action-link {
+        color: var(--accent-blue);
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .action-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Top Stats Grid */
+      .stats-grid {
+        display: grid;
+        margin-bottom: 24px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .stat-card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 16px;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+      .stat-change.positive {
+        color: var(--trade-buy);
+        font-size: 0.875rem;
+      }
+      .stat-change.negative {
+        color: var(--trade-sell);
+        font-size: 0.875rem;
+      }
+
+      .color-buy {
+        color: var(--trade-buy);
+      }
+      .color-sell {
+        color: var(--trade-sell);
+      }
+
+      /* Utility */
+      .anim-flash-green {
+        animation: flashGreen 1s ease-out;
+      }
+      .anim-flash-red {
+        animation: flashRed 1s ease-out;
+      }
+
+      @keyframes flashGreen {
+        0% {
+          background-color: rgba(16, 185, 129, 0.4);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      @keyframes flashRed {
+        0% {
+          background-color: rgba(239, 68, 68, 0.4);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .filter-select {
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        outline: none;
+      }
+
+      .btn-outline {
+        padding: 6px 12px;
+        border: 1px solid var(--accent-blue);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .btn-outline:hover {
+        background-color: var(--accent-blue);
+        color: white;
+      }
+
+      tr:hover .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        width: 500px;
+        padding: 24px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        color: var(--text-main);
+      }
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+      }
+      .color-warning {
+        color: var(--warning);
+      }
+
+      .dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .dashboard-grid,
+      .dashboard-flex,
+      .dashboard,
+      .dashboard-full {
+        max-width: 2400px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 48px 32px 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="logo">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        HK-RFQ Maker
+      </div>
+      <div class="nav-item" onclick="window.location.href = '做市商.html'">
+        📈 做市商控制台
+      </div>
+      <div
+        class="nav-item"
+        onclick="window.location.href = '做市商-报价与订单.html'"
+      >
+        📊 报价与订单
+      </div>
+      <div
+        class="nav-item"
+        onclick="window.location.href = '做市商-债券持仓.html'"
+      >
+        🗄️ 债券持仓
+      </div>
+      <div class="nav-item active">🛒 认购发行债券</div>
+      <div class="nav-item">🏦 清算交收</div>
+      <div class="nav-item">🛡️ 风控与合规</div>
+      <div class="nav-item">🌐 Web3 资产池</div>
+      <div
+        class="nav-item"
+        onclick="window.location.href = '做市商-个人中心.html'"
+        style="margin-top: 24px"
+      >
+        👤 个人中心
+      </div>
+      <div
+        class="nav-item"
+        onclick="window.location.href = '登录注册.html'"
+        style="
+          margin-top: auto;
+          color: var(--trade-sell);
+          border-top: 1px solid var(--border-color);
+          padding-top: 16px;
+        "
+      >
+        🚪 退出账号
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <div>
+          <h2 style="font-size: 1.8rem; font-weight: 600">
+            认购发行债券 (Primary Market)
+          </h2>
+        </div>
+        <div style="color: var(--text-muted)" id="clock">00:00:00 HKT</div>
+      </header>
+
+      <div class="dashboard">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">一级市场正在发行 (Active Issuances)</div>
+            <div
+              style="
+                font-size: 0.875rem;
+                color: var(--accent-purple);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              查看更多
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>发行人 (Issuer)</th>
+                  <th>债券代码 (Code)</th>
+                  <th>币种</th>
+                  <th>计划发行规模</th>
+                  <th>期限 (Tenor)</th>
+                  <th>参考利率/收益率</th>
+                  <th>截止时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>香港特别行政区政府</td>
+                  <td>
+                    <span class="mono font-weight-bold">HKGB 3.0 06/26</span>
+                  </td>
+                  <td>HKD</td>
+                  <td class="mono">5,000,000,000</td>
+                  <td>2 年</td>
+                  <td class="mono color-warning">2.95% - 3.10%</td>
+                  <td>今日 16:00</td>
+                  <td>
+                    <button
+                      class="btn btn-primary"
+                      onclick="
+                        openSubscribeModal(
+                          'HKGB 3.0 06/26',
+                          '香港特别行政区政府',
+                          '5,000,000,000 HKD',
+                          '2.95% - 3.10%',
+                        )
+                      "
+                    >
+                      认购
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>腾讯控股有限公司</td>
+                  <td>
+                    <span class="mono font-weight-bold">TENCENT 4.5 12/29</span>
+                  </td>
+                  <td>USD</td>
+                  <td class="mono">1,000,000,000</td>
+                  <td>5 年</td>
+                  <td class="mono color-warning">4.40% - 4.60%</td>
+                  <td>明日 12:00</td>
+                  <td>
+                    <button
+                      class="btn btn-primary"
+                      onclick="
+                        openSubscribeModal(
+                          'TENCENT 4.5 12/29',
+                          '腾讯控股有限公司',
+                          '1,000,000,000 USD',
+                          '4.40% - 4.60%',
+                        )
+                      "
+                    >
+                      认购
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>ABC RWA Trust</td>
+                  <td>
+                    <span class="mono font-weight-bold">USDC-BOND-02</span>
+                  </td>
+                  <td>USDC</td>
+                  <td class="mono">50,000,000</td>
+                  <td>1 年</td>
+                  <td class="mono color-warning">5.00% - 5.25%</td>
+                  <td>2天后</td>
+                  <td>
+                    <button
+                      class="btn btn-primary"
+                      onclick="
+                        openSubscribeModal(
+                          'USDC-BOND-02',
+                          'ABC RWA Trust',
+                          '50,000,000 USDC',
+                          '5.00% - 5.25%',
+                        )
+                      "
+                    >
+                      认购
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">我的申购记录 (My Subscriptions)</div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>申购时间</th>
+                  <th>债券代码</th>
+                  <th>申购数量</th>
+                  <th>申购利率 (Yield)</th>
+                  <th>状态</th>
+                  <th>获配数量 (Allocated)</th>
+                </tr>
+              </thead>
+              <tbody id="subscription-history">
+                <tr>
+                  <td class="mono" style="font-size: 0.75rem">
+                    2024-05-20 10:15
+                  </td>
+                  <td><span class="mono">ALI 3.8 05/27</span></td>
+                  <td class="mono">50,000,000 USD</td>
+                  <td class="mono">3.750%</td>
+                  <td>
+                    <span
+                      class="badge"
+                      style="
+                        background: rgba(16, 185, 129, 0.1);
+                        color: var(--trade-buy);
+                      "
+                      >已获配</span
+                    >
+                  </td>
+                  <td class="mono color-buy font-weight-bold">
+                    30,000,000 USD
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Subscribe Modal -->
+    <div class="modal" id="subscribeModal">
+      <div class="modal-content">
+        <h3
+          style="
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+          "
+        >
+          提交认购意向 (Order Book)
+        </h3>
+        <div
+          style="
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-md);
+          "
+        >
+          <div class="flex-between" style="margin-bottom: 8px">
+            <span style="color: var(--text-muted); font-size: 0.875rem"
+              >标的</span
+            >
+            <span
+              class="mono font-weight-bold"
+              id="modal-bond"
+              style="color: var(--accent-purple)"
+              >HKGB 3.0 06/26</span
+            >
+          </div>
+          <div class="flex-between" style="margin-bottom: 8px">
+            <span style="color: var(--text-muted); font-size: 0.875rem"
+              >发行人</span
+            >
+            <span id="modal-issuer">香港特别行政区政府</span>
+          </div>
+          <div class="flex-between">
+            <span style="color: var(--text-muted); font-size: 0.875rem"
+              >参考区间</span
+            >
+            <span class="mono color-warning" id="modal-range"
+              >2.95% - 3.10%</span
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>申购数量 (Subscription Amount)</label>
+          <input
+            type="text"
+            class="form-control mono"
+            id="sub-amount"
+            placeholder="例如: 10000000"
+          />
+        </div>
+        <div class="form-group">
+          <label>申购收益率 (Bidding Yield %)</label>
+          <input
+            type="text"
+            class="form-control mono"
+            id="sub-yield"
+            placeholder="例如: 3.05"
+          />
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px">
+          <button
+            class="btn"
+            style="
+              flex: 1;
+              background: var(--bg-surface-hover);
+              color: var(--text-main);
+            "
+            onclick="closeSubscribeModal()"
+          >
+            取消 (Cancel)
+          </button>
+          <button
+            class="btn btn-primary"
+            style="flex: 2"
+            id="confirm-sub-btn"
+            onclick="submitSubscription()"
+          >
+            确认申购 (Submit Order)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").innerText =
+          now.toLocaleTimeString("zh-CN", { hour12: false }) + " HKT";
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      function openSubscribeModal(bond, issuer, size, range) {
+        document.getElementById("modal-bond").innerText = bond;
+        document.getElementById("modal-issuer").innerText = issuer;
+        document.getElementById("modal-range").innerText = range;
+        document.getElementById("sub-amount").value = "";
+        document.getElementById("sub-yield").value = "";
+        document.getElementById("subscribeModal").classList.add("active");
+      }
+
+      function closeSubscribeModal() {
+        document.getElementById("subscribeModal").classList.remove("active");
+      }
+
+      function submitSubscription() {
+        const btn = document.getElementById("confirm-sub-btn");
+        const bond = document.getElementById("modal-bond").innerText;
+        const amount =
+          document.getElementById("sub-amount").value || "10,000,000";
+        const yieldVal = document.getElementById("sub-yield").value || "3.050";
+
+        btn.innerText = "提交中...";
+        btn.style.opacity = "0.7";
+
+        setTimeout(() => {
+          btn.innerText = "申购成功！";
+          btn.style.background = "var(--trade-buy)";
+
+          // Add to history
+          const tbody = document.getElementById("subscription-history");
+          const now = new Date();
+          const timeStr =
+            now.toLocaleDateString() +
+            " " +
+            now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const currency = bond.includes("USDC")
+            ? "USDC"
+            : bond.includes("TENCENT")
+              ? "USD"
+              : "HKD";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                    <td class="mono" style="font-size: 0.75rem;">${timeStr}</td>
+                    <td><span class="mono">${bond}</span></td>
+                    <td class="mono">${amount} ${currency}</td>
+                    <td class="mono">${yieldVal}%</td>
+                    <td><span class="badge" style="background: rgba(59,130,246,0.1); color: var(--accent-blue);">建簿中 (Bookbuilding)</span></td>
+                    <td class="mono" style="color: var(--text-muted);">-</td>
+                `;
+          tbody.insertBefore(tr, tbody.firstChild);
+
+          setTimeout(() => {
+            closeSubscribeModal();
+            btn.innerText = "确认申购 (Submit Order)";
+            btn.style.background = "";
+            btn.style.opacity = "1";
+          }, 1000);
+        }, 800);
+      }
+    </script>
+  </body>
+</html>

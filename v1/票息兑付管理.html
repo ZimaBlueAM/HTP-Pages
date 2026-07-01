@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HK RFQ Market - 票息兑付管理</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-blue-hover: #2563eb;
+        --accent-purple: #8b5cf6;
+        --trade-buy: #10b981; /* Green */
+        --trade-sell: #ef4444; /* Red */
+        --border-color: #1e293b;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --status-pending: #f59e0b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        letter-spacing: 1px;
+      }
+
+      /* Typography */
+      h1,
+      h2,
+      h3 {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Layout */
+      .sidebar {
+        width: 240px;
+        min-width: 240px;
+        flex-shrink: 0;
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+      }
+
+      .logo {
+        padding: 0 24px 24px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent-blue);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-item {
+        padding: 12px 24px;
+        color: var(--text-muted);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        color: var(--text-main);
+        background-color: rgba(59, 130, 246, 0.1);
+        border-right: 3px solid var(--accent-blue);
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .header {
+        height: 64px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        background-color: rgba(19, 26, 40, 0.8);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .system-status {
+        display: flex;
+        gap: 16px;
+        font-size: 1.1rem;
+        align-items: center;
+      }
+
+      .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .badge.compliance {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+      .badge.web3 {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid var(--accent-purple);
+      }
+      .badge.market {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--accent-blue);
+        border: 1px solid var(--accent-blue);
+      }
+      .badge.pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        border: 1px solid #f59e0b;
+      }
+      .badge.success {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+
+      .dashboard-flex,
+      .dashboard-grid,
+      .dashboard,
+      .dashboard-full {
+        padding: 48px 32px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        max-width: 2400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .grid-2-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      /* Cards */
+      .card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        color: var(--text-main);
+        font-weight: 600;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Form Elements */
+      .form-group {
+        margin-bottom: 24px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .form-control {
+        width: 100%;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        transition: border-color 0.2s;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+      }
+      .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+      }
+      .form-control:disabled {
+        background-color: rgba(0, 0, 0, 0.2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        padding: 14px 20px;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-align: center;
+        letter-spacing: 1px;
+        font-size: 0.875rem;
+      }
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn-trad {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        border: 1px solid var(--accent-blue);
+      }
+      .btn-trad.selected {
+        background-color: var(--accent-blue);
+        color: #fff;
+      }
+      .btn-rwa {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+        border: 1px solid var(--accent-purple);
+      }
+      .btn-rwa.selected {
+        background-color: var(--accent-purple);
+        color: #fff;
+      }
+      .btn-primary {
+        background-color: var(--accent-blue);
+        color: white;
+        width: 100%;
+        margin-top: 16px;
+        font-weight: 600;
+      }
+
+      /* Data Tables */
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      th {
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+        white-space: nowrap;
+      }
+      tr:hover td {
+        background-color: var(--bg-surface-hover);
+      }
+
+      .quote-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .quote-best {
+        color: var(--trade-buy);
+        font-weight: 600;
+      }
+
+      .action-link {
+        color: var(--accent-blue);
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .action-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Top Stats Grid */
+      .stats-grid {
+        display: grid;
+        margin-bottom: 24px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .stat-card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 16px;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+      .stat-change.positive {
+        color: var(--trade-buy);
+        font-size: 0.875rem;
+      }
+      .stat-change.negative {
+        color: var(--trade-sell);
+        font-size: 0.875rem;
+      }
+
+      .color-buy {
+        color: var(--trade-buy);
+      }
+      .color-sell {
+        color: var(--trade-sell);
+      }
+
+      /* Utility */
+      .anim-flash-green {
+        animation: flashGreen 1s ease-out;
+      }
+      .anim-flash-red {
+        animation: flashRed 1s ease-out;
+      }
+
+      @keyframes flashGreen {
+        0% {
+          background-color: rgba(16, 185, 129, 0.4);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      @keyframes flashRed {
+        0% {
+          background-color: rgba(239, 68, 68, 0.4);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .filter-select {
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        outline: none;
+      }
+
+      .btn-outline {
+        padding: 6px 12px;
+        border: 1px solid var(--accent-blue);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .btn-outline:hover {
+        background-color: var(--accent-blue);
+        color: white;
+      }
+
+      /* Layout */
+      .badge.web3 {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid var(--accent-purple);
+      }
+      .grid-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+      }
+      tr:hover .amount-box {
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        padding: 16px;
+        border-radius: var(--radius-md);
+        text-align: center;
+        margin-bottom: 16px;
+      }
+      .amount-title {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .amount-val {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--trade-sell);
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .dashboard-grid,
+      .dashboard-flex,
+      .dashboard,
+      .dashboard-full {
+        max-width: 2400px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 48px 32px 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        HK-RFQ Pro
+      </div>
+      <div style="flex: 1">
+        <a href="发行人.html" class="nav-item">📊 发行人工作台</a>
+        <a href="债券发行与登记.html" class="nav-item">📝 债券发行与登记</a>
+        <a href="发行人二级市场监控.html" class="nav-item">📈 二级市场监控</a>
+        <a href="票息兑付管理.html" class="nav-item active">💰 票息兑付管理</a>
+        <div class="nav-item">🌐 RWA 资产通证化</div>
+      </div>
+      <div
+        class="nav-item"
+        onclick="window.location.href = '登录注册.html'"
+        style="
+          margin-top: auto;
+          color: var(--trade-sell);
+          border-top: 1px solid var(--border-color);
+          padding-top: 16px;
+        "
+      >
+        🚪 退出账号 (Logout)
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <div>
+          <h2 style="font-size: 1.8rem; font-weight: 600">
+            Coupon & Repayment Management
+          </h2>
+        </div>
+        <div class="system-status">
+          <div class="badge compliance">✓ 派发代理银行已连接</div>
+          <div class="badge web3">⬡ 智能合约自动化就绪</div>
+          <div style="color: var(--text-muted); padding-left: 16px" id="clock">
+            00:00:00 HKT
+          </div>
+        </div>
+      </header>
+
+      <div class="dashboard-flex">
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">未来30天需兑付总额</div>
+            <div class="stat-value mono color-sell">320.50M</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">待资金划拨笔数</div>
+            <div class="stat-value mono">2</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">本年度已付息总额</div>
+            <div class="stat-value mono">1,450.2M</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">RWA 自动派息合约</div>
+            <div class="stat-value mono" style="color: var(--accent-purple)">
+              正常运行
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="grid-layout">
+          <!-- Left: Upcoming Payments -->
+          <div style="display: flex; flex-direction: column; gap: 24px">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">近期兑付日程表 (Upcoming Payments)</div>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>兑付日期</th>
+                      <th>债券简称</th>
+                      <th>兑付类型</th>
+                      <th>金额 (HKD)</th>
+                      <th>当前状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mono" style="color: var(--trade-sell)">
+                        2024-11-20
+                      </td>
+                      <td>HKGB 2.5 05/26</td>
+                      <td>付息 (Coupon)</td>
+                      <td class="mono">62,500,000</td>
+                      <td><span class="badge warning">等待资金划拨</span></td>
+                      <td><button class="btn-outline">处理</button></td>
+                    </tr>
+                    <tr>
+                      <td class="mono">2024-12-31</td>
+                      <td>HKG-RWA-01</td>
+                      <td>付息 (Coupon)</td>
+                      <td class="mono">49,200,000</td>
+                      <td><span class="badge pending">等待合约触发</span></td>
+                      <td><button class="btn-outline">预览</button></td>
+                    </tr>
+                    <tr>
+                      <td class="mono">2025-02-15</td>
+                      <td>HKGB 3.2 08/28</td>
+                      <td>付息 (Coupon)</td>
+                      <td class="mono">128,000,000</td>
+                      <td><span class="badge">未到期</span></td>
+                      <td>-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">历史兑付记录 (Payment History)</div>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>兑付日期</th>
+                      <th>债券简称</th>
+                      <th>兑付类型</th>
+                      <th>金额 (HKD)</th>
+                      <th>结算通道</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mono">2024-05-20</td>
+                      <td>HKGB 2.5 05/26</td>
+                      <td>付息</td>
+                      <td class="mono">62,500,000</td>
+                      <td>CMU 支付代理行</td>
+                      <td><span class="badge success">兑付成功</span></td>
+                    </tr>
+                    <tr>
+                      <td class="mono">2024-08-15</td>
+                      <td>HKGB 3.2 08/28</td>
+                      <td>付息</td>
+                      <td class="mono">128,000,000</td>
+                      <td>CMU 支付代理行</td>
+                      <td><span class="badge success">兑付成功</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Action panel -->
+          <div>
+            <div class="card" style="margin-bottom: 24px">
+              <div class="card-header">
+                <div class="card-title">资金划拨与授权 (Payment Ops)</div>
+              </div>
+              <div class="form-group">
+                <label>选择兑付批次</label>
+                <select class="form-control">
+                  <option>2024-11-20 | HKGB 2.5 05/26 (付息)</option>
+                  <option>2024-12-31 | HKG-RWA-01 (付息)</option>
+                </select>
+              </div>
+
+              <div class="amount-box">
+                <div class="amount-title">应付总额 (Total Due)</div>
+                <div class="amount-val">HKD 62,500,000.00</div>
+              </div>
+
+              <div class="form-group">
+                <label>付款账户 (Funding Account)</label>
+                <select class="form-control mono">
+                  <option>HKD-CORP-88231992 (余额: 450M)</option>
+                  <option>USD-CORP-99211002 (余额: 20M)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>资金划拨至</label>
+                <input
+                  type="text"
+                  class="form-control mono"
+                  value="CMU 代理付款专户 (CMU Paying Agent)"
+                  disabled
+                  style="
+                    background-color: var(--bg-surface-hover);
+                    color: var(--text-muted);
+                  "
+                />
+              </div>
+
+              <button class="btn btn-primary" style="margin-top: 16px">
+                确认划拨资金 (Transfer Funds)
+              </button>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">RWA 智能合约派息 (Web3)</div>
+              </div>
+              <p
+                style="
+                  font-size: 0.875rem;
+                  color: var(--text-muted);
+                  margin-bottom: 16px;
+                  line-height: 1.5;
+                "
+              >
+                对于在区块链上注册的 RWA
+                债券，系统将自动通过智能合约向持有人钱包地址空投数字货币 (如
+                USDC) 作为票息。
+              </p>
+
+              <div class="form-group">
+                <label>合约授权管理</label>
+                <input
+                  type="text"
+                  class="form-control mono"
+                  value="Contract: 0x8a9B...4c2F"
+                  disabled
+                  style="
+                    background-color: var(--bg-surface-hover);
+                    color: var(--text-muted);
+                  "
+                />
+              </div>
+
+              <button class="btn btn-rwa">
+                多签授权合约派息 (Multisig Approve)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").textContent =
+          now.toLocaleTimeString("en-US", { hour12: false }) + " HKT";
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2452 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HK RFQ Market - 买方工作台</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-blue-hover: #2563eb;
+        --accent-purple: #8b5cf6;
+        --trade-buy: #10b981; /* Green */
+        --trade-sell: #ef4444; /* Red */
+        --border-color: #1e293b;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --status-pending: #f59e0b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        letter-spacing: 1px;
+      }
+
+      /* Typography */
+      h1,
+      h2,
+      h3 {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Layout */
+      .sidebar {
+        width: 240px;
+        min-width: 240px;
+        flex-shrink: 0;
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+      }
+
+      .logo {
+        padding: 0 24px 24px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent-blue);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-item {
+        padding: 12px 24px;
+        color: var(--text-muted);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        color: var(--text-main);
+        background-color: rgba(59, 130, 246, 0.1);
+        border-right: 3px solid var(--accent-blue);
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .header {
+        height: 64px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        background-color: rgba(19, 26, 40, 0.8);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .system-status {
+        display: flex;
+        gap: 16px;
+        font-size: 1.1rem;
+        align-items: center;
+      }
+
+      .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .badge.compliance {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+      .badge.web3 {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid var(--accent-purple);
+      }
+      .badge.market {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--accent-blue);
+        border: 1px solid var(--accent-blue);
+      }
+      .badge.pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        border: 1px solid #f59e0b;
+      }
+      .badge.success {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+
+      .dashboard-flex,
+      .dashboard-grid,
+      .dashboard,
+      .dashboard-full {
+        padding: 48px 32px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        max-width: 2400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .grid-2-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      /* Cards */
+      .card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        color: var(--text-main);
+        font-weight: 600;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Form Elements */
+      .form-group {
+        margin-bottom: 24px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .form-control {
+        width: 100%;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        transition: border-color 0.2s;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+      }
+      .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+      }
+      .form-control:disabled {
+        background-color: rgba(0, 0, 0, 0.2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 16px;
+      }
+      .btn {
+        padding: 14px 20px;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-align: center;
+        letter-spacing: 1px;
+        font-size: 0.875rem;
+      }
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn-trad {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        border: 1px solid var(--accent-blue);
+      }
+      .btn-trad.selected {
+        background-color: var(--accent-blue);
+        color: #fff;
+      }
+      .btn-rwa {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+        border: 1px solid var(--accent-purple);
+      }
+      .btn-rwa.selected {
+        background-color: var(--accent-purple);
+        color: #fff;
+      }
+      .btn-primary {
+        background-color: var(--accent-blue);
+        color: white;
+        width: 100%;
+        margin-top: 16px;
+        font-weight: 600;
+      }
+
+      /* Data Tables */
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      th {
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+        white-space: nowrap;
+      }
+      tr:hover td {
+        background-color: var(--bg-surface-hover);
+      }
+
+      .quote-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .quote-best {
+        color: var(--trade-buy);
+        font-weight: 600;
+      }
+
+      .action-link {
+        color: var(--accent-blue);
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .action-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Top Stats Grid */
+      .stats-grid {
+        display: grid;
+        margin-bottom: 24px;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+      }
+      .stat-card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 16px;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+      .stat-change.positive {
+        color: var(--trade-buy);
+        font-size: 0.875rem;
+      }
+      .stat-change.negative {
+        color: var(--trade-sell);
+        font-size: 0.875rem;
+      }
+
+      .color-buy {
+        color: var(--trade-buy);
+      }
+      .color-sell {
+        color: var(--trade-sell);
+      }
+
+      /* Utility */
+      .anim-flash-green {
+        animation: flashGreen 1s ease-out;
+      }
+      .anim-flash-red {
+        animation: flashRed 1s ease-out;
+      }
+
+      @keyframes flashGreen {
+        0% {
+          background-color: rgba(16, 185, 129, 0.4);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      @keyframes flashRed {
+        0% {
+          background-color: rgba(239, 68, 68, 0.4);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .filter-select {
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        outline: none;
+      }
+
+      .btn-outline {
+        padding: 6px 12px;
+        border: 1px solid var(--accent-blue);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .btn-outline:hover {
+        background-color: var(--accent-blue);
+        color: white;
+      }
+
+      /* Layout */
+      .badge.web3 {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid #8b5cf6;
+      }
+      /* SPA Containers */
+      .page-container {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+      }
+      .page-container.active {
+        display: flex;
+      }
+
+      .dir-group {
+        display: flex;
+        gap: 16px;
+      }
+      .dir-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: var(--radius-md);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+      }
+      .btn-buy {
+        background-color: rgba(16, 185, 129, 0.05);
+        color: var(--trade-buy);
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+      .btn-buy:hover {
+        border-color: var(--trade-buy);
+        background-color: rgba(16, 185, 129, 0.1);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+      }
+      .btn-buy.selected {
+        color: #fff;
+        border-color: var(--trade-buy);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        transform: translateY(-2px);
+      }
+      .btn-sell {
+        background-color: rgba(239, 68, 68, 0.05);
+        color: var(--trade-sell);
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+      .btn-sell:hover {
+        border-color: var(--trade-sell);
+        background-color: rgba(239, 68, 68, 0.1);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+      }
+      .btn-sell.selected {
+        color: #fff;
+        border-color: var(--trade-sell);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        transform: translateY(-2px);
+      }
+      .auto-width {
+        width: auto;
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+      }
+      .toggle-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background: var(--bg-base);
+        border-radius: var(--radius-md);
+        margin-top: 12px;
+      }
+
+      /* Tabs within page */
+      .tabs-nav {
+        display: flex;
+        gap: 24px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 24px;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 12px 0;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s;
+        width: auto;
+        margin-top: 0;
+      }
+      .tab-btn:hover {
+        color: var(--text-main);
+      }
+      .tab-btn.active {
+        color: var(--accent-blue);
+      }
+      .tab-btn.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--accent-blue);
+        border-radius: 2px 2px 0 0;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      /* Progress Steps */
+      .settlement-steps {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        margin: 12px 0;
+      }
+      .settlement-steps::before {
+        content: "";
+        position: absolute;
+        top: 12px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--border-color);
+        z-index: 1;
+      }
+      .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        z-index: 2;
+        flex: 1;
+      }
+      .step-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--bg-base);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        color: var(--text-muted);
+      }
+      .step.completed .step-icon {
+        background: var(--trade-buy);
+        border-color: var(--trade-buy);
+        color: white;
+      }
+      .step.active .step-icon {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue);
+      }
+      .step-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-align: center;
+        white-space: nowrap;
+      }
+      .step.completed .step-label {
+        color: var(--text-main);
+      }
+      .step.active .step-label {
+        color: var(--accent-blue);
+        font-weight: 500;
+      }
+      /* Utility Animations */
+
+      /* Modal Background */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+      }
+      .modal-content {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        width: 600px;
+        max-width: 90%;
+        padding: 24px;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+      }
+      .receipt-label {
+        color: var(--text-muted);
+      }
+      .receipt-value {
+        font-weight: 500;
+        color: var(--text-main);
+        text-align: right;
+      }
+
+      .dashboard-grid,
+      .dashboard {
+        display: grid;
+        grid-template-columns: 1fr 500px;
+        gap: 24px;
+      }
+      .left-col {
+        grid-column: 2;
+      }
+      .right-col {
+        grid-column: 1;
+        grid-row: 1;
+      }
+      .dashboard-full,
+      .dashboard-flex {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      @media (max-width: 1024px) {
+        .dashboard-grid,
+        .dashboard {
+          grid-template-columns: 1fr;
+        }
+        .left-col,
+        .right-col {
+          grid-column: auto;
+          grid-row: auto;
+        }
+      }
+      .dashboard-grid,
+      .dashboard-flex,
+      .dashboard,
+      .dashboard-full {
+        max-width: 2400px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 48px 32px 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        HK-RFQ Pro
+      </div>
+      <div
+        class="nav-item active"
+        onclick="switchMainPage('page-dashboard', this)"
+      >
+        📈 买方工作台
+      </div>
+      <div class="nav-item" onclick="switchMainPage('page-records', this)">
+        💱 交易记录
+      </div>
+      <div class="nav-item" onclick="switchMainPage('page-settlement', this)">
+        🏦 结算与清算
+      </div>
+      <div class="nav-item">🛡️ 合规审批</div>
+      <div class="nav-item">🌐 Web3 资产</div>
+      <div class="nav-item" onclick="switchMainPage('page-profile', this)">
+        👤 个人中心
+      </div>
+      <div
+        class="nav-item"
+        onclick="window.location.href = '登录注册.html'"
+        style="
+          margin-top: auto;
+          color: var(--trade-sell);
+          border-top: 1px solid var(--border-color);
+          padding-top: 16px;
+        "
+      >
+        🚪 退出账号
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div>
+          <h2 id="page-title" style="font-size: 1.8rem; font-weight: 600">
+            Inquiry Dashboard
+          </h2>
+        </div>
+        <div class="system-status">
+          <div class="badge compliance">✓ SFC 监管合规</div>
+          <div class="badge web3">⬡ 跨链网络正常</div>
+          <div style="color: var(--text-muted); padding-left: 16px" id="clock">
+            00:00:00 HKT
+          </div>
+        </div>
+      </header>
+
+      <!-- ============================================== -->
+      <!-- PAGE 1: DASHBOARD                              -->
+      <!-- ============================================== -->
+      <div id="page-dashboard" class="page-container active">
+        <div class="dashboard">
+          <!-- Left Column: Settings & Create RFQ -->
+          <div class="left-col">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">发起询价 (New RFQ)</div>
+              </div>
+
+              <div class="form-group">
+                <label>券种/代码 (Bond Code)</label>
+                <input
+                  list="bond-codes"
+                  class="form-control mono"
+                  placeholder="搜索或输入券种代码..."
+                />
+                <datalist id="bond-codes">
+                  <option value="HKGB 2.5 05/26 (港元国债)"></option>
+                  <option value="TENCENT 3.2 08/28 (企业债)"></option>
+                  <option value="BABA 2.9 11/27 (企业债)"></option>
+                  <option value="RMB-OFF 4.1 12/25 (离岸人民币)"></option>
+                  <option value="USDC-BOND-01 (链上 RWA)"></option>
+                </datalist>
+              </div>
+
+              <div class="row-2">
+                <div class="form-group">
+                  <label>到期日 (Maturity)</label>
+                  <input
+                    type="text"
+                    class="form-control mono"
+                    value="2026-05-20"
+                    disabled
+                    style="
+                      background-color: rgba(255, 255, 255, 0.05);
+                      color: var(--text-muted);
+                      cursor: not-allowed;
+                      border-color: transparent;
+                    "
+                  />
+                </div>
+                <div class="form-group">
+                  <label>参考收益率 (Ref YTM)</label>
+                  <input
+                    type="text"
+                    class="form-control mono"
+                    value="3.435%"
+                    disabled
+                    style="
+                      background-color: rgba(255, 255, 255, 0.05);
+                      color: var(--text-muted);
+                      cursor: not-allowed;
+                      border-color: transparent;
+                    "
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>结算方式 (Settlement)</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  value="智能合约 (链上原子交割)"
+                  disabled
+                  style="
+                    background-color: rgba(255, 255, 255, 0.05);
+                    color: var(--text-muted);
+                    cursor: not-allowed;
+                    border-color: transparent;
+                  "
+                />
+              </div>
+
+              <div class="form-group">
+                <label>买卖方向 (Direction)</label>
+                <div class="btn-group dir-group">
+                  <button
+                    type="button"
+                    class="btn btn-buy dir-btn selected"
+                    onclick="toggleDir('buy')"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M12 5v14M19 12l-7-7-7 7"/></svg>
+                    买入 (BUY)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sell dir-btn"
+                    onclick="toggleDir('sell')"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                    卖出 (SELL)
+                  </button>
+                </div>
+              </div>
+
+              <div class="toggle-switch">
+                <span
+                  style="
+                    font-size: 0.875rem;
+                    color: var(--text-muted);
+                    letter-spacing: 0.5px;
+                  "
+                  >匿名交易模式 (脱敏)</span
+                >
+                <input
+                  type="checkbox"
+                  checked
+                  style="
+                    accent-color: var(--accent-blue);
+                    width: 16px;
+                    height: 16px;
+                  "
+                />
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-primary"
+                onclick="submitRFQ()"
+              >
+                发送询价至白名单机构
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Stats & Data -->
+          <div class="right-col">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">可用余额 (HKD)</div>
+                <div class="stat-value mono">1,250.00M</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">锁定资金 (HKD)</div>
+                <div class="stat-value mono">320.50M</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">活跃询价笔数</div>
+                <div class="stat-value mono">4</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">做市商平均响应</div>
+                <div class="stat-value mono">
+                  12.4s <span class="stat-change positive">↓1.2s</span>
+                </div>
+              </div>
+              <div
+                class="stat-card"
+                style="cursor: pointer; transition: all 0.2s"
+                onclick="
+                  switchMainPage(
+                    'page-settlement',
+                    document.querySelectorAll('.nav-item')[2],
+                    'interest',
+                  )
+                "
+                onmouseover="this.style.transform = 'translateY(-2px)'"
+                onmouseout="this.style.transform = 'translateY(0)'"
+              >
+                <div class="stat-label">
+                  累计收息 (HKD) <span style="float: right">↗</span>
+                </div>
+                <div class="stat-value mono color-buy">1.94M</div>
+              </div>
+            </div>
+
+            <!-- Bond Market Overview -->
+            <div class="card" style="margin-bottom: 24px">
+              <div class="card-header">
+                <div class="card-title">
+                  市场概览 - 可交割券池 (Market Overview)
+                </div>
+                <div style="font-size: 0.875rem; color: var(--text-muted)">
+                  按流动性、到期日筛选
+                  <span
+                    style="
+                      color: var(--accent-blue);
+                      cursor: pointer;
+                      margin-left: 8px;
+                    "
+                    >查看全部 &rarr;</span
+                  >
+                </div>
+              </div>
+              <div
+                class="table-container"
+                style="max-height: 250px; overflow-y: auto"
+              >
+                <table>
+                  <thead
+                    style="
+                      position: sticky;
+                      top: 0;
+                      background: var(--bg-surface);
+                      z-index: 1;
+                    "
+                  >
+                    <tr>
+                      <th>债券代码 (Code)</th>
+                      <th>名称 / 发行人</th>
+                      <th>剩余期限</th>
+                      <th>到期日 (Maturity)</th>
+                      <th>参考收益率 (Ref YTM)</th>
+                      <th>流动性</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="mono font-weight-bold">HKGB 2.5 05/26</div>
+                      </td>
+                      <td>
+                        <div style="font-size: 0.875rem">
+                          香港特别行政区政府
+                        </div>
+                        <div
+                          style="font-size: 0.75rem; color: var(--text-muted)"
+                        >
+                          港元国债
+                        </div>
+                      </td>
+                      <td>2.1 年</td>
+                      <td class="mono">2026-05-20</td>
+                      <td class="mono color-sell">
+                        3.435% <span style="font-size: 0.75rem">↑</span>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(16, 185, 129, 0.1);
+                            color: var(--trade-buy);
+                          "
+                          >高</span
+                        >
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-primary auto-width"
+                          style="
+                            margin-top: 0;
+                            padding: 6px 12px;
+                            font-size: 0.75rem;
+                            width: auto;
+                          "
+                          onclick="quickRFQ('HKGB 2.5 05/26 (港元国债)', '2026-05-20', '3.435%', 'buy')"
+                        >
+                          快速询价
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="mono font-weight-bold">
+                          TENCENT 3.2 08/28
+                        </div>
+                      </td>
+                      <td>
+                        <div style="font-size: 0.875rem">腾讯控股</div>
+                        <div
+                          style="font-size: 0.75rem; color: var(--text-muted)"
+                        >
+                          企业债 (USD)
+                        </div>
+                      </td>
+                      <td>4.4 年</td>
+                      <td class="mono">2028-08-15</td>
+                      <td class="mono color-buy">
+                        4.850% <span style="font-size: 0.75rem">↓</span>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(59, 130, 246, 0.1);
+                            color: var(--accent-blue);
+                          "
+                          >中</span
+                        >
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-primary auto-width"
+                          style="
+                            margin-top: 0;
+                            padding: 6px 12px;
+                            font-size: 0.75rem;
+                            width: auto;
+                          "
+                          onclick="quickRFQ('TENCENT 3.2 08/28 (企业债)', '2028-08-15', '4.850%', 'buy')"
+                        >
+                          快速询价
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="mono font-weight-bold">BABA 2.9 11/27</div>
+                      </td>
+                      <td>
+                        <div style="font-size: 0.875rem">阿里巴巴</div>
+                        <div
+                          style="font-size: 0.75rem; color: var(--text-muted)"
+                        >
+                          企业债 (USD)
+                        </div>
+                      </td>
+                      <td>3.6 年</td>
+                      <td class="mono">2027-11-22</td>
+                      <td class="mono color-sell">
+                        4.620% <span style="font-size: 0.75rem">↑</span>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(59, 130, 246, 0.1);
+                            color: var(--accent-blue);
+                          "
+                          >中</span
+                        >
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-primary auto-width"
+                          style="
+                            margin-top: 0;
+                            padding: 6px 12px;
+                            font-size: 0.75rem;
+                            width: auto;
+                          "
+                          onclick="quickRFQ('BABA 2.9 11/27 (企业债)', '2027-11-22', '4.620%', 'sell')"
+                        >
+                          快速询价
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="mono font-weight-bold">USDC-BOND-01</div>
+                      </td>
+                      <td>
+                        <div style="font-size: 0.875rem">Ondo Finance</div>
+                        <div style="font-size: 0.75rem; color: #a78bfa">
+                          链上 RWA (Polygon)
+                        </div>
+                      </td>
+                      <td>0.5 年</td>
+                      <td class="mono">2024-09-30</td>
+                      <td class="mono color-buy">
+                        5.120% <span style="font-size: 0.75rem">↓</span>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(16, 185, 129, 0.1);
+                            color: var(--trade-buy);
+                          "
+                          >高</span
+                        >
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-primary auto-width"
+                          style="
+                            margin-top: 0;
+                            padding: 6px 12px;
+                            font-size: 0.75rem;
+                            width: auto;
+                          "
+                          onclick="quickRFQ('USDC-BOND-01 (链上 RWA)', '2024-09-30', '5.120%', 'buy')"
+                        >
+                          快速询价
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Active RFQs -->
+            <div class="card" style="margin-bottom: 24px">
+              <div class="card-header">
+                <div class="card-title">进行中的询价 (Active Inquiries)</div>
+                <div style="font-size: 0.875rem; color: var(--text-muted)">
+                  <span
+                    style="
+                      color: var(--accent-blue);
+                      cursor: pointer;
+                      margin-left: 8px;
+                    "
+                    >查看全部 &rarr;</span
+                  >
+                </div>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>标的 (Bond)</th>
+                      <th>方向</th>
+                      <th>数量 (Vol)</th>
+                      <th>剩余时间</th>
+                      <th>到期收益率 (YTM)</th>
+                      <th>最优报价 (Best Quote)</th>
+                      <th>做市商状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rfq-table-body">
+                    <tr>
+                      <td>
+                        <div class="mono">HKGB 2.5 05/26</div>
+                        <div
+                          style="font-size: 0.75rem; color: var(--text-muted)"
+                        >
+                          港元国债
+                        </div>
+                      </td>
+                      <td class="color-buy font-weight-bold">BUY</td>
+                      <td class="mono">100M</td>
+                      <td class="mono" style="color: #f59e0b">04:23</td>
+                      <td class="mono">3.435%</td>
+                      <td>
+                        <div class="quote-row">
+                          <span class="mono quote-best" id="live-quote-1"
+                            >YTM 3.425%</span
+                          >
+                          <span
+                            style="font-size: 0.75rem; color: var(--text-muted)"
+                            >偏离基准 -0.01%</span
+                          >
+                        </div>
+                      </td>
+                      <td>3/5 已回复</td>
+                      <td>
+                        <a
+                          class="action-link"
+                          onclick="alert('进入二级审批流程')"
+                          >确认成交</a
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="mono">TENCENT 3.2 08/28</div>
+                        <div
+                          style="font-size: 0.75rem; color: var(--text-muted)"
+                        >
+                          企业债
+                        </div>
+                      </td>
+                      <td class="color-sell font-weight-bold">SELL</td>
+                      <td class="mono">50M</td>
+                      <td class="mono">12:45</td>
+                      <td class="mono">4.850%</td>
+                      <td>
+                        <div class="quote-row">
+                          <span class="mono" style="color: var(--text-muted)"
+                            >等待报价...</span
+                          >
+                        </div>
+                      </td>
+                      <td>0/4 已回复</td>
+                      <td>
+                        <a
+                          class="action-link"
+                          style="color: var(--text-muted)"
+                          onclick="alert('撤销该询价')"
+                          >撤销</a
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PAGE 2: TRADE RECORDS                          -->
+      <!-- ============================================== -->
+      <div id="page-records" class="page-container">
+        <div class="dashboard-full">
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">今日成交笔数 (Trades)</div>
+              <div class="stat-value mono">12</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">今日成交面值总计 (Volume HKD)</div>
+              <div class="stat-value mono">850.00M</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">待结算笔数 (Pending Settlement)</div>
+              <div class="stat-value mono">3</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">历史总交易量 (Total Volume)</div>
+              <div class="stat-value mono">12.5B</div>
+            </div>
+            <div
+              class="stat-card"
+              style="
+                cursor: pointer;
+                transition: all 0.2s;
+                border-color: var(--accent-blue);
+                background: rgba(59, 130, 246, 0.05);
+              "
+              onclick="
+                switchMainPage(
+                  'page-settlement',
+                  document.querySelectorAll('.nav-item')[2],
+                  'interest',
+                )
+              "
+              onmouseover="
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 6px rgba(59,130,246,0.1)';
+              "
+              onmouseout="
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+              "
+            >
+              <div class="stat-label">
+                累计获取利息 (Total Interest)
+                <span style="float: right">↗</span>
+              </div>
+              <div class="stat-value mono" style="color: var(--trade-buy)">
+                150,000
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters & Data Table -->
+          <div class="card">
+            <div class="filter-bar">
+              <input
+                type="date"
+                class="form-control mono"
+                value="2024-03-15"
+                style="width: auto"
+              />
+              <select class="form-control" style="width: auto">
+                <option value="">所有券种 (All Bonds)</option>
+                <option value="HKGB 2.5 05/26">HKGB 2.5 05/26</option>
+                <option value="TENCENT 3.2 08/28">TENCENT 3.2 08/28</option>
+              </select>
+              <select class="form-control" style="width: auto">
+                <option value="">买卖方向 (All Directions)</option>
+                <option value="BUY">买入 (BUY)</option>
+                <option value="SELL">卖出 (SELL)</option>
+              </select>
+              <select class="form-control" style="width: auto">
+                <option value="">结算状态 (All Status)</option>
+                <option value="SETTLED">已结算 (Settled)</option>
+                <option value="PENDING">待结算 (Pending)</option>
+                <option value="CONFIRMING">链上确认中 (Confirming)</option>
+              </select>
+              <button
+                type="button"
+                class="btn btn-primary auto-width"
+                style="width: auto; margin: 0"
+              >
+                筛选 (Filter)
+              </button>
+              <button type="button" class="btn btn-outline" style="width: auto">
+                导出 CSV
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>交易编号 (Trade ID)</th>
+                    <th>成交时间 (Time)</th>
+                    <th>债券代码 (Bond Code)</th>
+                    <th>买卖方向 (Dir)</th>
+                    <th>成交面值 (Face Value)</th>
+                    <th>成交价/YTM</th>
+                    <th>交易对手 (Counterparty)</th>
+                    <th>结算方式 (Settlement)</th>
+                    <th>状态 (Status)</th>
+                    <th>操作 (Action)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="mono" style="font-size: 0.8rem">
+                        TRD-20240315-081
+                      </div>
+                    </td>
+                    <td class="mono" style="font-size: 0.8rem">14:32:45</td>
+                    <td>
+                      <div class="mono font-weight-bold">HKGB 2.5 05/26</div>
+                    </td>
+                    <td>
+                      <span class="color-buy font-weight-bold">买入 (BUY)</span>
+                    </td>
+                    <td class="mono">50,000,000</td>
+                    <td class="mono">98.250 / 3.425%</td>
+                    <td>** 银行 (Anonymized)</td>
+                    <td>
+                      <span style="font-size: 0.75rem; color: #a78bfa"
+                        >链上原子交割 (DvP)</span
+                      >
+                    </td>
+                    <td>
+                      <span class="badge status-confirming">链上确认中</span>
+                    </td>
+                    <td>
+                      <span
+                        class="action-link"
+                        onclick="
+                          openGenericModal(
+                            'Receipt',
+                            'TRD-20240315-081',
+                            'HKGB 2.5 05/26',
+                            'BUY',
+                            '50,000,000',
+                            '98.250 / 3.425%',
+                            '链上确认中',
+                            '0x8f2a...c931',
+                          )
+                        "
+                        >查看凭证</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="mono" style="font-size: 0.8rem">
+                        TRD-20240315-023
+                      </div>
+                    </td>
+                    <td class="mono" style="font-size: 0.8rem">10:15:20</td>
+                    <td>
+                      <div class="mono font-weight-bold">USDT-BOND-02</div>
+                    </td>
+                    <td>
+                      <span class="color-sell font-weight-bold"
+                        >卖出 (SELL)</span
+                      >
+                    </td>
+                    <td class="mono">2,000,000</td>
+                    <td class="mono">100.10 / 4.850%</td>
+                    <td>Wintermute</td>
+                    <td>
+                      <span style="font-size: 0.75rem; color: #a78bfa"
+                        >智能合约 (Ethereum)</span
+                      >
+                    </td>
+                    <td>
+                      <span class="badge status-settled">已结算 (Tx Hash)</span>
+                    </td>
+                    <td>
+                      <span
+                        class="action-link"
+                        onclick="
+                          openGenericModal(
+                            'Receipt',
+                            'TRD-20240315-023',
+                            'USDT-BOND-02',
+                            'SELL',
+                            '2,000,000',
+                            '100.10 / 4.850%',
+                            '已结算',
+                            '0x4a1b...e92f',
+                          )
+                        "
+                        >查看凭证</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="mono" style="font-size: 0.8rem">
+                        TRD-20240314-112
+                      </div>
+                    </td>
+                    <td class="mono" style="font-size: 0.8rem">
+                      2024-03-14 15:45
+                    </td>
+                    <td>
+                      <div class="mono font-weight-bold">USDC-BOND-01</div>
+                    </td>
+                    <td>
+                      <span class="color-buy font-weight-bold">买入 (BUY)</span>
+                    </td>
+                    <td class="mono">5,000,000</td>
+                    <td class="mono">100.00 / 5.120%</td>
+                    <td>Ondo Finance</td>
+                    <td>
+                      <span style="font-size: 0.75rem; color: #a78bfa"
+                        >智能合约 (Polygon)</span
+                      >
+                    </td>
+                    <td>
+                      <span class="badge status-settled">已结算 (Tx Hash)</span>
+                    </td>
+                    <td>
+                      <span
+                        class="action-link"
+                        onclick="
+                          openGenericModal(
+                            'Receipt',
+                            'TRD-20240314-112',
+                            'USDC-BOND-01',
+                            'BUY',
+                            '5,000,000',
+                            '100.00 / 5.120%',
+                            '已结算',
+                            '0x9a4c...d842',
+                          )
+                        "
+                        >查看凭证</span
+                      >
+                      <span
+                        class="action-link"
+                        style="color: var(--warning); margin-left: 8px"
+                        onclick="
+                          claimInterestAction('USDC-BOND-01', '50,000 USDC')
+                        "
+                        >领取利息</span
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PAGE 3: SETTLEMENT & CLEARING                  -->
+      <!-- ============================================== -->
+      <div id="page-settlement" class="page-container">
+        <div class="dashboard-full">
+          <!-- Stats Grid -->
+          <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr)">
+            <div class="stat-card">
+              <div class="stat-label">
+                今日待交收金额 (Pending Settlement HKD)
+              </div>
+              <div class="stat-value mono" style="color: var(--warning)">
+                350.50M
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">本月已完成交收 (Settled This Month)</div>
+              <div class="stat-value mono">1.2B</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">待领取利息 (Pending Interest)</div>
+              <div class="stat-value mono" style="color: var(--warning)">
+                125,000 HKD
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">
+                累计获取利息 (Total Interest Claimed)
+              </div>
+              <div class="stat-value mono" style="color: var(--trade-buy)">
+                150,000 USDC
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs Navigation -->
+          <div class="tabs-nav">
+            <button
+              type="button"
+              class="tab-btn active"
+              onclick="switchInnerTab('trades')"
+            >
+              交易交收 (Trade Settlement)
+            </button>
+            <button
+              type="button"
+              class="tab-btn"
+              onclick="switchInnerTab('interest')"
+              id="tab-btn-interest"
+            >
+              利息派发 (Interest Records)
+            </button>
+          </div>
+
+          <!-- Tab 1: Trade Settlement -->
+          <div id="inner-tab-trades" class="tab-content active">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">待交收明细 (Pending Settlements)</h3>
+              </div>
+              <div class="filter-bar">
+                <select class="form-control" style="width: auto">
+                  <option value="">交收进度 (Progress)</option>
+                  <option value="INSTANT">即刻执行 (Instant)</option>
+                  <option value="CONFIRMING">等待出块 (Pending)</option>
+                  <option value="QUEUED">网络排队中 (Queued)</option>
+                </select>
+                <select class="form-control" style="width: auto">
+                  <option value="">结算类型 (Type)</option>
+                  <option value="DVP">原子交割 (DvP)</option>
+                  <option value="SMART_CONTRACT">以太坊 (Ethereum)</option>
+                </select>
+                <button
+                  type="button"
+                  class="btn btn-primary auto-width"
+                  style="width: auto; margin: 0"
+                >
+                  查询 (Search)
+                </button>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>处理时间 (Time)</th>
+                      <th>关联交易号 (Trade ID)</th>
+                      <th>债券代码 (Bond Code)</th>
+                      <th>结算类型 (Type)</th>
+                      <th>需付资金/债券 (Obligation)</th>
+                      <th>应收资金/债券 (Entitlement)</th>
+                      <th>交收进度 (Progress)</th>
+                      <th>操作 (Action)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td
+                        class="mono"
+                        style="font-size: 0.8rem; color: var(--warning)"
+                      >
+                        区块确认中 (8/12)
+                      </td>
+                      <td>
+                        <div class="mono" style="font-size: 0.8rem">
+                          TRD-20240313-045
+                        </div>
+                      </td>
+                      <td>
+                        <div class="mono font-weight-bold">BABA 2.9 11/27</div>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(148, 163, 184, 0.1);
+                            color: var(--text-muted);
+                            border: 1px solid var(--text-muted);
+                          "
+                          >智能合约交收</span
+                        >
+                      </td>
+                      <td>
+                        <div class="mono" style="color: var(--trade-sell)">
+                          -9,655,000 HKD
+                        </div>
+                      </td>
+                      <td>
+                        <div class="mono" style="color: var(--trade-buy)">
+                          +10,000,000 FV
+                        </div>
+                      </td>
+                      <td style="min-width: 250px">
+                        <div class="settlement-steps">
+                          <div class="step completed">
+                            <div class="step-icon">✓</div>
+                            <div class="step-label">交易匹配</div>
+                          </div>
+                          <div class="step active">
+                            <div class="step-icon">⌛</div>
+                            <div class="step-label">资金准备</div>
+                          </div>
+                          <div class="step">
+                            <div class="step-icon">3</div>
+                            <div class="step-label">券款对付</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          class="action-link"
+                          onclick="
+                            openGenericModal(
+                              'Settlement',
+                              'TRD-20240313-045',
+                              'BABA 2.9 11/27',
+                              '',
+                              '-9,655,000 HKD',
+                              '+10,000,000 FV',
+                              '智能合约锁定中',
+                              '',
+                            )
+                          "
+                          >处理交收</span
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="mono" style="font-size: 0.8rem">
+                        区块确认中 (12/12)
+                      </td>
+                      <td>
+                        <div class="mono" style="font-size: 0.8rem">
+                          TRD-20240315-081
+                        </div>
+                      </td>
+                      <td>
+                        <div class="mono font-weight-bold">HKGB 2.5 05/26</div>
+                      </td>
+                      <td><span class="badge web3">Web3 DvP</span></td>
+                      <td>
+                        <div class="mono" style="color: var(--trade-sell)">
+                          -49,125,000 HKD (T)
+                        </div>
+                      </td>
+                      <td>
+                        <div class="mono" style="color: var(--trade-buy)">
+                          +50,000,000 FV (T)
+                        </div>
+                      </td>
+                      <td style="min-width: 250px">
+                        <div class="settlement-steps">
+                          <div class="step completed">
+                            <div class="step-icon">✓</div>
+                            <div class="step-label">合约调用</div>
+                          </div>
+                          <div class="step active">
+                            <div class="step-icon">⌛</div>
+                            <div class="step-label">链上确认</div>
+                          </div>
+                          <div class="step">
+                            <div class="step-icon">3</div>
+                            <div class="step-label">原子交割</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          class="action-link"
+                          onclick="
+                            openGenericModal(
+                              'Settlement',
+                              'TRD-20240315-081',
+                              'HKGB 2.5 05/26',
+                              '',
+                              '-49,125,000 HKD (Token)',
+                              '+50,000,000 FV (Token)',
+                              '区块确认中 (8/12)',
+                              '',
+                            )
+                          "
+                          >查看进度</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Interest Records -->
+          <div id="inner-tab-interest" class="tab-content">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">利息明细 (Interest Records)</h3>
+              </div>
+              <div class="filter-bar">
+                <select class="form-control" style="width: auto">
+                  <option value="">所有券种 (All Bonds)</option>
+                  <option value="HKGB 3.0 10/28">HKGB 3.0 10/28</option>
+                  <option value="USDC-BOND-01">USDC-BOND-01</option>
+                  <option value="USDC-BOND-03">USDC-BOND-03</option>
+                </select>
+                <select class="form-control" style="width: auto">
+                  <option value="">状态 (All Status)</option>
+                  <option value="CLAIMED">已领取 (Claimed)</option>
+                  <option value="PENDING">待领取 (Pending)</option>
+                </select>
+                <button
+                  type="button"
+                  class="btn btn-primary auto-width"
+                  style="width: auto; margin: 0"
+                >
+                  查询 (Search)
+                </button>
+              </div>
+
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>派息编号 (Interest ID)</th>
+                      <th>结算日期 (Date)</th>
+                      <th>债券代码 (Bond Code)</th>
+                      <th>利息金额 (Amount)</th>
+                      <th>支付周期 (Period)</th>
+                      <th>结算方式 (Settlement)</th>
+                      <th>状态 (Status)</th>
+                      <th>操作 (Action)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="mono" style="font-size: 0.8rem">
+                          INT-202403-001
+                        </div>
+                      </td>
+                      <td class="mono" style="font-size: 0.8rem">2024-03-15</td>
+                      <td>
+                        <div class="mono font-weight-bold">USDC-BOND-01</div>
+                      </td>
+                      <td
+                        class="mono"
+                        style="color: var(--trade-buy); font-weight: bold"
+                      >
+                        +50,000 USDC
+                      </td>
+                      <td>Q1 2024</td>
+                      <td>
+                        <span style="font-size: 0.75rem; color: #a78bfa"
+                          >智能合约自动派发 (Polygon)</span
+                        >
+                      </td>
+                      <td><span class="badge status-settled">已领取</span></td>
+                      <td>
+                        <span
+                          class="action-link"
+                          onclick="
+                            openGenericModal(
+                              'Interest',
+                              'INT-202403-001',
+                              'USDC-BOND-01',
+                              '',
+                              '50,000 USDC',
+                              'Q1 2024',
+                              '已领取',
+                              '0x9a4c...d842',
+                            )
+                          "
+                          >查看详情</span
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="mono" style="font-size: 0.8rem">
+                          INT-202403-003
+                        </div>
+                      </td>
+                      <td class="mono" style="font-size: 0.8rem">2024-03-10</td>
+                      <td>
+                        <div class="mono font-weight-bold">HKGB 3.0 10/28</div>
+                      </td>
+                      <td
+                        class="mono"
+                        style="color: var(--trade-buy); font-weight: bold"
+                      >
+                        +125,000 HKD
+                      </td>
+                      <td>H1 2024</td>
+                      <td>智能合约自动派发 (Ethereum)</td>
+                      <td><span class="badge status-pending">待领取</span></td>
+                      <td>
+                        <span
+                          class="action-link"
+                          onclick="
+                            openGenericModal(
+                              'Interest',
+                              'INT-202403-003',
+                              'HKGB 3.0 10/28',
+                              '',
+                              '125,000 HKD',
+                              'H1 2024',
+                              '待领取',
+                              'N/A',
+                            )
+                          "
+                          >查看详情</span
+                        >
+                        <span
+                          class="action-link"
+                          style="color: var(--warning); margin-left: 8px"
+                          onclick="
+                            claimInterestAction('HKGB 3.0 10/28', '125,000 HKD')
+                          "
+                          >立即领取</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- PAGE 4: PERSONAL CENTER                        -->
+      <!-- ============================================== -->
+      <div id="page-profile" class="page-container">
+        <div class="dashboard-full">
+          <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr)">
+            <div class="stat-card">
+              <div class="stat-label">KYC 认证状态 (KYC Status)</div>
+              <div class="stat-value mono" style="color: var(--trade-buy)">
+                Level 3 (投资者)
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">已绑定钱包 (Linked Wallets)</div>
+              <div class="stat-value mono">3</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">当前子账户 (Sub-accounts)</div>
+              <div class="stat-value mono">2</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">API 状态 (API Status)</div>
+              <div class="stat-value mono" style="color: var(--trade-buy)">
+                Active
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+            <!-- Account Info Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">基本信息 (Account Info)</h3>
+                <button type="button" class="btn btn-outline btn-sm">
+                  编辑
+                </button>
+              </div>
+              <div class="form-group">
+                <label>机构名称 (Organization)</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  value="Alpha Capital Management"
+                  disabled
+                  style="
+                    background-color: rgba(255, 255, 255, 0.05);
+                    color: var(--text-muted);
+                    cursor: not-allowed;
+                    border-color: transparent;
+                  "
+                />
+              </div>
+              <div class="form-group">
+                <label>SFC 牌照号码 (SFC CE No.)</label>
+                <input
+                  type="text"
+                  class="form-control mono"
+                  value="BCE123"
+                  disabled
+                  style="
+                    background-color: rgba(255, 255, 255, 0.05);
+                    color: var(--text-muted);
+                    cursor: not-allowed;
+                    border-color: transparent;
+                  "
+                />
+              </div>
+              <div class="form-group">
+                <label>联系人邮箱 (Email)</label>
+                <input
+                  type="email"
+                  class="form-control mono"
+                  value="trader@alphacapital.com"
+                  disabled
+                  style="
+                    background-color: rgba(255, 255, 255, 0.05);
+                    color: var(--text-muted);
+                    cursor: not-allowed;
+                    border-color: transparent;
+                  "
+                />
+              </div>
+              <div class="form-group">
+                <label>角色权限 (Role)</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  value="买方交易员 (Buyer Trader) - 拥有询价及确认权限"
+                  disabled
+                  style="
+                    background-color: rgba(255, 255, 255, 0.05);
+                    color: var(--text-muted);
+                    cursor: not-allowed;
+                    border-color: transparent;
+                  "
+                />
+              </div>
+            </div>
+
+            <!-- Web3 Wallets Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">链上资产与钱包 (Web3 Wallets)</h3>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  style="width: auto; margin: 0"
+                >
+                  + 绑定新钱包
+                </button>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>网络 (Network)</th>
+                      <th>地址 (Address)</th>
+                      <th>状态 (Status)</th>
+                      <th>操作 (Action)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Ethereum</td>
+                      <td class="mono">0x1234...abcd</td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(16, 185, 129, 0.1);
+                            color: var(--trade-buy);
+                          "
+                          >已验证</span
+                        >
+                      </td>
+                      <td>
+                        <span
+                          class="action-link"
+                          style="color: var(--trade-sell)"
+                          >解绑</span
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Polygon</td>
+                      <td class="mono">0x1234...abcd</td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(16, 185, 129, 0.1);
+                            color: var(--trade-buy);
+                          "
+                          >已验证</span
+                        >
+                      </td>
+                      <td>
+                        <span
+                          class="action-link"
+                          style="color: var(--trade-sell)"
+                          >解绑</span
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Arbitrum</td>
+                      <td class="mono">0x9988...7766</td>
+                      <td>
+                        <span
+                          class="badge"
+                          style="
+                            background: rgba(245, 158, 11, 0.1);
+                            color: var(--warning);
+                          "
+                          >验签中</span
+                        >
+                      </td>
+                      <td><span class="action-link">重新验证</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- API Keys Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">API 密钥管理 (API Keys)</h3>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  style="width: auto; margin: 0"
+                >
+                  生成新密钥
+                </button>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>名称 (Name)</th>
+                      <th>权限 (Permissions)</th>
+                      <th>最后使用 (Last Used)</th>
+                      <th>操作 (Action)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Algo-Trader-01</td>
+                      <td>只读, 询价 (Read, RFQ)</td>
+                      <td class="mono">2024-03-15 10:22</td>
+                      <td>
+                        <span
+                          class="action-link"
+                          style="color: var(--trade-sell)"
+                          >撤销</span
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Data-Sync</td>
+                      <td>只读 (Read Only)</td>
+                      <td class="mono">2024-03-15 15:30</td>
+                      <td>
+                        <span
+                          class="action-link"
+                          style="color: var(--trade-sell)"
+                          >撤销</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Preferences Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">通知与偏好 (Preferences)</h3>
+                <button type="button" class="btn btn-outline btn-sm">
+                  保存
+                </button>
+              </div>
+              <div class="toggle-switch">
+                <span
+                  style="
+                    font-size: 0.875rem;
+                    color: var(--text-main);
+                    letter-spacing: 0.5px;
+                  "
+                  >邮件通知 (Email Alerts)</span
+                >
+                <input
+                  type="checkbox"
+                  checked
+                  style="
+                    accent-color: var(--accent-blue);
+                    width: 16px;
+                    height: 16px;
+                  "
+                />
+              </div>
+              <div class="toggle-switch">
+                <span
+                  style="
+                    font-size: 0.875rem;
+                    color: var(--text-main);
+                    letter-spacing: 0.5px;
+                  "
+                  >Webhook 推送 (Webhook Push)</span
+                >
+                <input
+                  type="checkbox"
+                  checked
+                  style="
+                    accent-color: var(--accent-blue);
+                    width: 16px;
+                    height: 16px;
+                  "
+                />
+              </div>
+              <div class="toggle-switch">
+                <span
+                  style="
+                    font-size: 0.875rem;
+                    color: var(--text-main);
+                    letter-spacing: 0.5px;
+                  "
+                  >登录双重验证 (2FA)</span
+                >
+                <input
+                  type="checkbox"
+                  checked
+                  style="
+                    accent-color: var(--accent-blue);
+                    width: 16px;
+                    height: 16px;
+                  "
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Global Universal Modal -->
+    <div class="modal-overlay" id="globalModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 style="margin: 0" id="modalTitle">详情 (Details)</h3>
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            onclick="closeModal()"
+            style="border: none; font-size: 1.2rem; padding: 0 8px; width: auto"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Content injected via JS -->
+        </div>
+        <div
+          style="
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+          "
+          id="modalActions"
+        >
+          <!-- Actions injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Main Page Navigation
+      const titles = {
+        "page-dashboard": "Inquiry Dashboard",
+        "page-records": "Trade Records",
+        "page-settlement": "Settlement & Clearing",
+        "page-profile": "Personal Center",
+      };
+
+      function switchMainPage(pageId, navElement, innerTab = null) {
+        // Update Sidebar
+        document
+          .querySelectorAll(".sidebar .nav-item")
+          .forEach((el) => el.classList.remove("active"));
+        if (navElement) navElement.classList.add("active");
+
+        // Update Main Content
+        document
+          .querySelectorAll(".page-container")
+          .forEach((page) => page.classList.remove("active"));
+        document.getElementById(pageId).classList.add("active");
+
+        // Update Title
+        document.getElementById("page-title").textContent = titles[pageId];
+
+        // Handle inner tabs if specified
+        if (innerTab) {
+          switchInnerTab(innerTab);
+        }
+      }
+
+      // Inner Tab Navigation (for Settlement page)
+      function switchInnerTab(tabId) {
+        document
+          .querySelectorAll(".tabs-nav .tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        document
+          .querySelectorAll("#page-settlement .tab-content")
+          .forEach((content) => content.classList.remove("active"));
+
+        document
+          .querySelector(
+            `.tabs-nav button[onclick="switchInnerTab('${tabId}')"]`,
+          )
+          .classList.add("active");
+        document.getElementById(`inner-${tabId}`).classList.add("active");
+      }
+
+      // Simulated interactions
+      function toggleDir(dir) {
+        document
+          .querySelectorAll(".btn-group .btn")
+          .forEach((btn) => btn.classList.remove("selected"));
+        document.querySelector(`.btn-${dir}`).classList.add("selected");
+      }
+
+      function quickRFQ(bondCode, maturity, ytm, dir) {
+        // Find inputs
+        const bondInput = document.querySelector('input[list="bond-codes"]');
+        const maturityInput = document.querySelectorAll('.row-2 .form-group input')[0];
+        const ytmInput = document.querySelectorAll('.row-2 .form-group input')[1];
+
+        // Set values
+        if (bondInput) bondInput.value = bondCode;
+        if (maturityInput) maturityInput.value = maturity;
+        if (ytmInput) ytmInput.value = ytm;
+        if (dir) toggleDir(dir);
+
+        // Scroll to the card
+        const rfqCard = document.querySelector('.left-col .card');
+        if (rfqCard) {
+          rfqCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Add a highlight flash effect
+          rfqCard.style.transition = 'box-shadow 0.3s ease';
+          rfqCard.style.boxShadow = '0 0 0 4px var(--accent-blue)';
+          
+          setTimeout(() => {
+            rfqCard.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }, 1500);
+        }
+      }
+
+      function submitRFQ() {
+        alert("询价请求已广播至做市商网络，等待报价...");
+        const btn = document.querySelector(".btn-primary");
+        btn.innerHTML = "发送成功 (等待中...)";
+        btn.style.backgroundColor = "var(--trade-buy)";
+        setTimeout(() => {
+          btn.innerHTML = "发送询价至白名单机构";
+          btn.style.backgroundColor = "var(--accent-blue)";
+        }, 3000);
+      }
+
+      // Simulating live data update for the best quote
+      setInterval(() => {
+        const quoteElem = document.getElementById("live-quote-1");
+        if (quoteElem) {
+          const base = 3.425;
+          const fluctuate = (Math.random() * 0.01 - 0.005).toFixed(3);
+          quoteElem.innerHTML = `YTM ${(base + parseFloat(fluctuate)).toFixed(3)}%`;
+          quoteElem.classList.remove("anim-flash-green");
+          void quoteElem.offsetWidth; // trigger reflow
+          quoteElem.classList.add("anim-flash-green");
+        }
+      }, 5000);
+
+      // Clock Update
+      function updateClock() {
+        const now = new Date();
+        const timeString =
+          now.toLocaleTimeString("en-US", { hour12: false }) + " HKT";
+        document.getElementById("clock").textContent = timeString;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // Universal Modal Logic
+      const modal = document.getElementById("globalModal");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalBody = document.getElementById("modalBody");
+      const modalActions = document.getElementById("modalActions");
+
+      function openGenericModal(
+        type,
+        id,
+        bond,
+        val1,
+        val2,
+        val3,
+        status,
+        txHash,
+      ) {
+        if (type === "Receipt") {
+          modalTitle.textContent = "交易凭证 (Trade Confirmation)";
+          modalBody.innerHTML = `
+                    <div class="receipt-row"><span class="receipt-label">交易编号</span><span class="receipt-value mono">${id}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">债券代码</span><span class="receipt-value mono font-weight-bold">${bond}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">买卖方向</span><span class="receipt-value" style="font-weight: 600;">${val1}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">成交面值</span><span class="receipt-value mono">${val2}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">成交价/YTM</span><span class="receipt-value mono">${val3}</span></div>
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                    <div class="receipt-row"><span class="receipt-label">结算状态</span><span class="receipt-value">${status}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">生成时间</span><span class="receipt-value mono">${new Date().toISOString().replace("T", " ").substring(0, 19)}</span></div>
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(16,185,129,0.1); border-radius: 8px; font-size: 0.8rem; color: var(--trade-buy); text-align: center;">
+                        ✓ 该交易记录已通过哈希上链存证 (TxHash: ${txHash})
+                    </div>
+                `;
+          modalActions.innerHTML = `
+                    <button type="button" class="btn btn-outline" style="width: auto; margin:0;" onclick="closeModal()">关闭</button>
+                    <button type="button" class="btn btn-primary" style="width: auto; margin:0;" onclick="alert('凭证已下载')">下载 PDF</button>
+                `;
+        } else if (type === "Settlement") {
+          modalTitle.textContent = "交收详情 (Settlement Details)";
+          modalBody.innerHTML = `
+                    <div class="receipt-row"><span class="receipt-label">交易编号</span><span class="receipt-value mono">${id}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">债券代码</span><span class="receipt-value mono font-weight-bold">${bond}</span></div>
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                    <div class="receipt-row"><span class="receipt-label">需付资金/债券</span><span class="receipt-value mono" style="color: var(--trade-sell);">${val2}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">应收资金/债券</span><span class="receipt-value mono" style="color: var(--trade-buy);">${val3}</span></div>
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                    <div class="receipt-row"><span class="receipt-label">当前状态</span><span class="receipt-value" style="color: var(--warning); font-weight: 600;">${status}</span></div>
+                `;
+          modalActions.innerHTML = `
+                    <button type="button" class="btn btn-outline" style="width: auto; margin:0;" onclick="closeModal()">关闭</button>
+                    <button type="button" class="btn btn-primary" style="width: auto; margin:0;" onclick="alert('交收指令已发送')">确认处理</button>
+                `;
+        } else if (type === "Interest") {
+          modalTitle.textContent = "利息派发详情 (Interest Details)";
+          let statusHtml =
+            status === "已领取"
+              ? `<span style="color: var(--trade-buy); font-weight: 600;">✓ ${status}</span>`
+              : `<span style="color: var(--warning); font-weight: 600;">⌛ ${status}</span>`;
+          modalBody.innerHTML = `
+                    <div class="receipt-row"><span class="receipt-label">派息编号</span><span class="receipt-value mono">${id}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">债券代码</span><span class="receipt-value mono font-weight-bold">${bond}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">支付周期</span><span class="receipt-value">${val3}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">利息金额</span><span class="receipt-value mono" style="color: var(--trade-buy); font-weight: bold; font-size: 1.1rem;">${val2}</span></div>
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                    <div class="receipt-row"><span class="receipt-label">领取状态</span><span class="receipt-value">${statusHtml}</span></div>
+                    <div class="receipt-row"><span class="receipt-label">凭证 (Ref)</span><span class="receipt-value mono">${txHash}</span></div>
+                `;
+          modalActions.innerHTML = `<button type="button" class="btn btn-outline" style="width: auto; margin:0;" onclick="closeModal()">关闭</button>`;
+          if (status === "待领取") {
+            modalActions.innerHTML += `<button type="button" class="btn btn-primary" style="width: auto; margin:0;" onclick="claimInterestAction('${bond}', '${val2}')">立即领取</button>`;
+          }
+        }
+
+        modal.style.display = "flex";
+      }
+
+      function closeModal() {
+        modal.style.display = "none";
+      }
+
+      window.claimInterestAction = function (bondCode, amount) {
+        alert(
+          `已成功发送结算请求！\n\n即将领取 ${bondCode} 的利息：${amount}。`,
+        );
+        closeModal();
+      };
+    </script>
+  </body>
+</html>
