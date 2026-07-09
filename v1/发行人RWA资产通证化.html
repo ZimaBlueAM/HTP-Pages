@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HK RFQ Market - RWA资产通证化</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-blue-hover: #2563eb;
+        --accent-purple: #8b5cf6;
+        --trade-buy: #10b981; /* Green */
+        --trade-sell: #ef4444; /* Red */
+        --border-color: #1e293b;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --status-pending: #f59e0b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        letter-spacing: 1px;
+      }
+
+      /* Typography */
+      h1,
+      h2,
+      h3 {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Layout */
+      .sidebar {
+        width: 240px;
+        min-width: 240px;
+        flex-shrink: 0;
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+      }
+
+      .logo {
+        padding: 0 24px 24px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent-blue);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-item {
+        padding: 12px 24px;
+        color: var(--text-muted);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        color: var(--text-main);
+        background-color: rgba(59, 130, 246, 0.1);
+        border-right: 3px solid var(--accent-blue);
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .header {
+        height: 64px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        background-color: rgba(19, 26, 40, 0.8);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .system-status {
+        display: flex;
+        gap: 16px;
+        font-size: 0.875rem;
+        align-items: center;
+      }
+
+      .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .badge.compliance {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--trade-buy);
+        border: 1px solid var(--trade-buy);
+      }
+      .badge.web3 {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid var(--accent-purple);
+      }
+      
+      .dashboard {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      /* RWA Specific Styles */
+      .rwa-grid {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 24px;
+      }
+
+      .card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .form-control {
+        width: 100%;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 10px;
+        border-radius: var(--radius-md);
+      }
+
+      .btn {
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background-color: var(--accent-purple);
+        color: white;
+        width: 100%;
+      }
+      .btn-primary:hover {
+        background-color: #7c3aed;
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--accent-purple);
+        color: var(--accent-purple);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        text-align: left;
+        padding: 12px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+      }
+      td {
+        padding: 16px 12px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+      }
+
+      .status-pill {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+      }
+      
+      .status-pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+      }
+
+      .upload-box {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        text-align: center;
+        color: var(--text-muted);
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .upload-box:hover {
+        border-color: var(--accent-purple);
+        color: var(--accent-purple);
+      }
+
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        HK-RFQ Pro
+      </div>
+      <div style="flex: 1">
+        <a href="发行人.html" class="nav-item">📊 发行人工作台</a>
+        <a href="债券发行与登记.html" class="nav-item">📝 债券发行与登记</a>
+        <div class="nav-item" onclick="alert('即将跳转')">📈 二级市场监控</div>
+        <a href="票息兑付管理.html" class="nav-item">💰 票息兑付管理</a>
+        <div class="nav-item active">🌐 RWA 资产通证化</div>
+        <div class="nav-item" onclick="alert('即将跳转')">👤 个人中心</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <h2>RWA 资产通证化中台 (RWA Tokenization)</h2>
+        <div class="system-status">
+          <div class="badge web3">ERC-3643 标准</div>
+          <div class="badge compliance">SFC 第9类牌照网络</div>
+        </div>
+      </header>
+
+      <div class="dashboard">
+        <!-- Top Stats -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+          <div class="card" style="padding: 16px;">
+            <div style="color: var(--text-muted); font-size: 0.875rem;">已上链资产规模</div>
+            <div class="mono" style="font-size: 1.5rem; font-weight: bold; margin-top: 8px;">HKD 850M</div>
+          </div>
+          <div class="card" style="padding: 16px;">
+            <div style="color: var(--text-muted); font-size: 0.875rem;">活跃通证数量</div>
+            <div class="mono" style="font-size: 1.5rem; font-weight: bold; margin-top: 8px; color: var(--accent-purple)">3</div>
+          </div>
+          <div class="card" style="padding: 16px;">
+            <div style="color: var(--text-muted); font-size: 0.875rem;">智能合约审计状态</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-top: 8px; color: var(--trade-buy)">100% 通过</div>
+          </div>
+          <div class="card" style="padding: 16px;">
+            <div style="color: var(--text-muted); font-size: 0.875rem;">持有人地址数</div>
+            <div class="mono" style="font-size: 1.5rem; font-weight: bold; margin-top: 8px;">1,245</div>
+          </div>
+        </div>
+
+        <div class="rwa-grid">
+          <!-- Left: Tokenization Form -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">发起新资产上链</h3>
+            </div>
+            
+            <div class="form-group">
+              <label>资产名称 (Asset Name)</label>
+              <input type="text" class="form-control" placeholder="e.g. 香港中环甲级写字楼 A座">
+            </div>
+
+            <div class="form-group">
+              <label>资产类别 (Asset Class)</label>
+              <select class="form-control">
+                <option>商业地产 (Real Estate)</option>
+                <option>绿色基础设施 (Green Infra)</option>
+                <option>艺术品/收藏品 (Art)</option>
+                <option>私募股权 (Private Equity)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>预估价值 (Estimated Value)</label>
+              <input type="text" class="form-control mono" placeholder="HKD 500,000,000">
+            </div>
+
+            <div class="form-group">
+              <label>通证参数 (Token Params)</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                <input type="text" class="form-control mono" placeholder="Symbol: e.g. RWA-HKG">
+                <input type="text" class="form-control mono" placeholder="Supply: 1,000,000">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>部署网络 (Blockchain Network)</label>
+              <select class="form-control">
+                <option>Polygon (合规侧链)</option>
+                <option>Ethereum (主网 - ERC3643)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>尽调文件与评估报告上传</label>
+              <div class="upload-box" onclick="alert('触发文件选择')">
+                <div style="font-size: 1.5rem; margin-bottom: 8px;">📄</div>
+                点击或拖拽文件至此<br>
+                <span style="font-size: 0.75rem; margin-top: 4px; display: inline-block;">PDF / DOCX 格式，将生成 IPFS 哈希上链</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 16px;" onclick="alert('部署请求已提交至智能合约')">
+              部署合规通证合约
+            </button>
+          </div>
+
+          <!-- Right: RWA Asset List -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">RWA 通证化资产库</h3>
+              <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem;">同步链上状态</button>
+            </div>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>通证代号</th>
+                  <th>底层资产</th>
+                  <th>总发行量</th>
+                  <th>合规状态</th>
+                  <th>网络</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono font-weight-bold" style="color: var(--accent-purple)">RWA-GRN-01</td>
+                  <td>离岸风电项目收益权</td>
+                  <td class="mono">500,000</td>
+                  <td><span class="status-pill">智能合约活跃</span></td>
+                  <td>Polygon</td>
+                  <td>
+                    <a href="#" style="color: var(--accent-blue); text-decoration: none; font-size: 0.875rem;">管理</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="mono font-weight-bold" style="color: var(--accent-purple)">RWA-EST-HK</td>
+                  <td>中环商业地产收益权</td>
+                  <td class="mono">1,000,000</td>
+                  <td><span class="status-pill">智能合约活跃</span></td>
+                  <td>Ethereum</td>
+                  <td>
+                    <a href="#" style="color: var(--accent-blue); text-decoration: none; font-size: 0.875rem;">管理</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="mono font-weight-bold" style="color: var(--text-muted)">RWA-ART-03</td>
+                  <td>高品质艺术品信托</td>
+                  <td class="mono">-</td>
+                  <td><span class="status-pill status-pending">资产审计中</span></td>
+                  <td>-</td>
+                  <td>
+                    <a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">查看进度</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

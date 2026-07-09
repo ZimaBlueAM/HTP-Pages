@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HashKey RFQ Market - 登录与注册</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-blue-hover: #2563eb;
+        --accent-purple: #8b5cf6;
+        --accent-purple-hover: #7c3aed;
+        --border-color: #1e293b;
+        --border-focus: #3b82f6;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
+        --trade-buy: #10b981;
+        --warning: #f59e0b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: normal;
+        background-image:
+          radial-gradient(
+            circle at 15% 50%,
+            rgba(139, 92, 246, 0.05) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 85% 30%,
+            rgba(59, 130, 246, 0.05) 0%,
+            transparent 50%
+          );
+      }
+
+      /* Typography */
+      h1,
+      h2 {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Container */
+      .auth-container {
+        width: 100%;
+        max-width: 440px;
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-xl);
+        box-shadow:
+          0 25px 50px -12px rgba(0, 0, 0, 0.5),
+          var(--shadow-glow);
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Logo & Header */
+      .auth-header {
+        padding: 40px 40px 24px;
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .logo-icon {
+        color: var(--accent-purple);
+      }
+
+      .subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      /* Tabs */
+      .auth-tabs {
+        display: flex;
+        margin: 0 40px 24px;
+        background-color: rgba(10, 14, 23, 0.6);
+        border-radius: var(--radius-md);
+        padding: 4px;
+        border: 1px solid var(--border-color);
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 10px 0;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .tab-btn.active {
+        background-color: var(--bg-surface-hover);
+        color: var(--text-main);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Forms */
+      .auth-body {
+        padding: 0 40px 40px;
+        position: relative;
+      }
+
+      .form-view {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .form-view.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      }
+
+      .form-control::placeholder {
+        color: rgba(148, 163, 184, 0.4);
+      }
+
+      /* Role Selection (Radio Buttons) */
+      .role-selector {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .role-option {
+        position: relative;
+      }
+
+      .role-option input[type="radio"] {
+        display: none;
+      }
+
+      .role-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 8px;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        gap: 6px;
+      }
+
+      .role-label svg {
+        width: 20px;
+        height: 20px;
+        opacity: 0.7;
+      }
+
+      .role-option input[type="radio"]:checked + .role-label {
+        border-color: var(--accent-purple);
+        background-color: rgba(139, 92, 246, 0.1);
+        color: var(--text-main);
+      }
+
+      .role-option input[type="radio"]:checked + .role-label svg {
+        color: var(--accent-purple);
+        opacity: 1;
+      }
+
+      /* Buttons */
+      .btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background-color: var(--accent-purple);
+        color: white;
+        margin-top: 32px;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+      }
+
+      .btn-primary:hover {
+        background-color: var(--accent-purple-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+      }
+
+      /* Footer links */
+      .auth-footer {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+
+      .auth-link {
+        color: var(--accent-blue);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .auth-link:hover {
+        color: var(--accent-blue-hover);
+        text-decoration: underline;
+      }
+
+      .forgot-password {
+        display: block;
+        text-align: right;
+        margin-top: -12px;
+        margin-bottom: 20px;
+        font-size: 0.825rem;
+      }
+
+      /* Security status */
+      .security-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: var(--trade-buy);
+        margin-top: 24px;
+        padding: 8px;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
+
+      /* Decorative top line */
+      .top-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="top-line"></div>
+
+      <div class="auth-header">
+        <div class="logo">
+          <span class="logo-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </span>
+          HashKey RFQ Market
+        </div>
+        <div class="subtitle">机构级数字资产询价交易网络</div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">
+          系统登录
+        </button>
+        <button class="tab-btn" onclick="switchTab('register')">
+          机构入驻
+        </button>
+      </div>
+
+      <div class="auth-body">
+        <!-- 登录表单 -->
+        <div id="login-view" class="form-view active">
+          <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label>机构邮箱 / 登录名</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="admin@institution.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>登录密码</label>
+              <input
+                type="password"
+                class="form-control"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>登录角色</label>
+              <div class="role-selector">
+                <label class="role-option">
+                  <input type="radio" name="login_role" value="buyer" checked />
+                  <div class="role-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                      ></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    买卖方 (Taker)
+                  </div>
+                </label>
+                <label class="role-option">
+                  <input type="radio" name="login_role" value="maker" />
+                  <div class="role-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline
+                        points="22 12 18 12 15 21 9 3 6 12 2 12"
+                      ></polyline>
+                    </svg>
+                    做市商 (Maker)
+                  </div>
+                </label>
+                <label class="role-option">
+                  <input type="radio" name="login_role" value="issuer" />
+                  <div class="role-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                      <path d="M2 17l10 5 10-5"></path>
+                      <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                    发行人 (Issuer)
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <a href="#" class="auth-link forgot-password">忘记密码？</a>
+
+            <div class="form-group">
+              <label>2FA 动态口令 (MFA)</label>
+              <input
+                type="text"
+                class="form-control mono"
+                placeholder="000 000"
+                maxlength="6"
+                pattern="\d{6}"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              安全登录
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- 注册表单 -->
+        <div id="register-view" class="form-view">
+          <form onsubmit="handleRegister(event)">
+            <div class="form-group">
+              <label>机构名称 (Full Legal Name)</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="e.g. Genesis Trading Ltd."
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>机构角色类型</label>
+              <div class="role-selector">
+                <label class="role-option">
+                  <input type="radio" name="role" value="buyer" checked />
+                  <div class="role-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                      ></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    买卖方 (Taker)
+                  </div>
+                </label>
+                <label class="role-option">
+                  <input type="radio" name="role" value="maker" />
+                  <div class="role-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline
+                        points="22 12 18 12 15 21 9 3 6 12 2 12"
+                      ></polyline>
+                    </svg>
+                    做市商 (Maker)
+                  </div>
+                </label>
+                <label class="role-option">
+                  <input type="radio" name="role" value="issuer" />
+                  <div class="role-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                      <path d="M2 17l10 5 10-5"></path>
+                      <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                    发行人 (Issuer)
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>企业邮箱 (Work Email)</label>
+              <input
+                type="email"
+                class="form-control"
+                placeholder="contact@institution.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>设置密码</label>
+              <input
+                type="password"
+                class="form-control"
+                placeholder="至少8位，包含大小写和符号"
+                required
+                minlength="8"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">提交入驻申请</button>
+
+            <div class="auth-footer">
+              注册即代表同意
+              <a href="#" class="auth-link">HK RFQ 交易协议</a> 及
+              <a href="#" class="auth-link">隐私政策</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="security-badge">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          端到端加密连接 · 符合 SFC 监管要求
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function switchTab(tabId) {
+        // Update tabs
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.classList.add("active");
+
+        // Update views
+        document.querySelectorAll(".form-view").forEach((view) => {
+          view.classList.remove("active");
+        });
+        document.getElementById(tabId + "-view").classList.add("active");
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = "正在验证安全凭证...";
+        btn.style.opacity = "0.8";
+        btn.disabled = true;
+
+        // Determine redirection based on the selected role
+        const role =
+          e.target.querySelector('.role-selector input[type="radio"]:checked')
+            ?.value || "buyer";
+        let targetUrl = "买方.html";
+        if (role === "maker") targetUrl = "做市商.html";
+        if (role === "issuer") targetUrl = "发行人.html";
+
+        // Simulate API call and redirect
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 1000);
+      }
+
+      function handleRegister(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+
+        btn.innerHTML = "提交中...";
+        btn.style.opacity = "0.8";
+        btn.disabled = true;
+
+        setTimeout(() => {
+          alert("入驻申请已提交，等待合规(KYC/KYB)审核！");
+          switchTab("login");
+          btn.innerHTML = "提交入驻申请";
+          btn.style.opacity = "1";
+          btn.disabled = false;
+
+          // reset active tab button explicitly
+          document.querySelectorAll(".tab-btn")[0].classList.add("active");
+          document.querySelectorAll(".tab-btn")[1].classList.remove("active");
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>

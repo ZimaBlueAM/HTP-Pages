@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HK RFQ Market - 平台治理端</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --trade-buy: #10b981;
+        --trade-sell: #ef4444;
+        --border-color: #1e293b;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --status-pending: #f59e0b;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+      }
+      .mono { font-family: "JetBrains Mono", monospace; }
+
+      /* Sidebar */
+      .sidebar {
+        width: 240px; min-width: 240px;
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-color);
+        display: flex; flex-direction: column; padding: 20px 0;
+      }
+      .logo {
+        padding: 0 24px 24px; font-size: 1.25rem; font-weight: 700;
+        color: var(--accent-purple); border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+      }
+      .nav-item {
+        padding: 12px 24px; color: var(--text-muted); cursor: pointer;
+        display: flex; align-items: center; gap: 12px; transition: 0.2s;
+      }
+      .nav-item:hover, .nav-item.active {
+        color: var(--text-main); background-color: rgba(139, 92, 246, 0.1);
+        border-right: 3px solid var(--accent-purple);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1; display: flex; flex-direction: column; overflow-y: auto;
+      }
+      .header {
+        height: 64px; border-bottom: 1px solid var(--border-color);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 32px; background: rgba(19, 26, 40, 0.8); backdrop-filter: blur(8px);
+        position: sticky; top: 0; z-index: 10;
+      }
+      .system-status { display: flex; gap: 16px; align-items: center; }
+      .badge {
+        padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+      }
+      .badge.admin { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+      .badge.health { background: rgba(16, 185, 129, 0.2); color: var(--trade-buy); border: 1px solid var(--trade-buy); }
+      .badge.error { background: rgba(239, 68, 68, 0.2); color: var(--trade-sell); border: 1px solid var(--trade-sell); }
+      .badge.warning { background: rgba(245, 158, 11, 0.2); color: var(--status-pending); border: 1px solid var(--status-pending); }
+
+      .dashboard { padding: 32px; display: none; flex-direction: column; gap: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+      .dashboard.active { display: flex; }
+
+      /* Grid & Cards */
+      .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+      .card {
+        background-color: var(--bg-surface); border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg); padding: 24px;
+      }
+      .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .card-title { font-size: 1.125rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+      .stat-label { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px; }
+      .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
+      
+      /* Tables */
+      .table-container { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; text-align: left; }
+      th { padding: 12px 16px; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
+      td { padding: 16px; border-bottom: 1px solid var(--border-color); font-size: 0.875rem; }
+      tr:hover td { background-color: var(--bg-surface-hover); }
+
+      /* Buttons */
+      .btn {
+        padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer;
+        font-weight: 500; font-size: 0.75rem; transition: 0.2s; color: white;
+      }
+      .btn-primary { background-color: var(--accent-purple); }
+      .btn-success { background-color: var(--trade-buy); }
+      .btn-danger { background-color: var(--trade-sell); }
+      .btn-outline { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+      .action-cell { display: flex; gap: 8px; flex-wrap: wrap; }
+
+      /* Forms & Inputs */
+      .form-group { margin-bottom: 16px; }
+      .form-group label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px; }
+      .form-control {
+        width: 100%; background: var(--bg-base); border: 1px solid var(--border-color);
+        color: var(--text-main); padding: 10px 12px; border-radius: var(--radius-md);
+      }
+      
+      /* Toggle Switch */
+      .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+      .toggle-switch input { opacity: 0; width: 0; height: 0; }
+      .slider {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: var(--border-color); transition: .4s; border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+        background-color: white; transition: .4s; border-radius: 50%;
+      }
+      input:checked + .slider { background-color: var(--trade-sell); }
+      input:checked + .slider:before { transform: translateX(20px); }
+      .switch-success input:checked + .slider { background-color: var(--trade-buy); }
+      .switch-purple input:checked + .slider { background-color: var(--accent-purple); }
+
+      .checkbox-group { display: flex; gap: 12px; align-items: center; font-size: 0.875rem; }
+      .checkbox-group input { width: 16px; height: 16px; accent-color: var(--accent-purple); }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        治理中心
+      </div>
+      <div class="nav-item active" onclick="switchTab('tab-dashboard', this)"><span>📊</span> 平台运营大盘</div>
+      <div class="nav-item" onclick="switchTab('tab-bond', this)"><span>📜</span> 债券发行与管理</div>
+      <div class="nav-item" onclick="switchTab('tab-rules', this)"><span>⚙️</span> 全局规则与风控</div>
+      <div class="nav-item" onclick="switchTab('tab-emergency', this)"><span>🚨</span> 系统紧急管控</div>
+      <div class="nav-item" onclick="switchTab('tab-multisig', this)"><span>🔐</span> 多签钱包管理</div>
+      <div class="nav-item" onclick="switchTab('tab-inst', this)"><span>🏦</span> 机构准入治理</div>
+      <div class="nav-item" onclick="switchTab('tab-audit', this)"><span>📋</span> 操作审计与对账</div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <div class="header">
+        <h2>Platform Governance (治理控制台)</h2>
+        <div class="system-status">
+          <span class="badge admin">治理管理员 (Governance Admin)</span>
+          <span class="badge health">系统健康度: 99.9%</span>
+        </div>
+      </div>
+
+      <!-- F031: 平台运营大盘 -->
+      <div id="tab-dashboard" class="dashboard active">
+        <div class="stats-grid">
+          <div class="card"><div class="stat-label">全平台日交易量 (HKD)</div><div class="stat-value mono">18.5B</div></div>
+          <div class="card"><div class="stat-label">在市债券数量</div><div class="stat-value mono">342</div></div>
+          <div class="card"><div class="stat-label">入驻机构 (买方/做市/发行)</div><div class="stat-value mono">142 / 45 / 38</div></div>
+          <div class="card"><div class="stat-label">今日异常交易监控</div><div class="stat-value mono" style="color:var(--trade-sell)">12 笔</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚠️ 实时异常交易监控</div></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>时间</th><th>询价单号</th><th>买方/做市商</th><th>预警类型</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">10:45:21</td><td class="mono">RFQ-9981</td><td>机构A / 汇丰</td><td><span class="badge error">价格偏离 >0.8%</span></td><td>已拦截</td><td><button class="btn btn-outline">查看详情</button></td></tr>
+                <tr><td class="mono">10:30:05</td><td class="mono">RFQ-9975</td><td>华夏 / 中银</td><td><span class="badge warning">超单日限额</span></td><td>待审批</td><td><button class="btn btn-outline">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- F032, F033: 债券发行与管理 -->
+      <div id="tab-bond" class="dashboard">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🆕 债券发行审批</div></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>申请时间</th><th>发行人</th><th>债券简称</th><th>发行规模</th><th>状态</th><th>多签进度</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td>2024-04-13</td><td>腾讯控股</td><td class="mono">TENCENT 4.0 2028</td><td>5亿 USD</td><td><span class="badge warning">待终审</span></td><td>1/3 已签</td>
+                  <td class="action-cell">
+                    <button class="btn btn-primary">发起多签</button>
+                    <button class="btn btn-danger">驳回/退回</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📜 债券上下架管理</div></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>债券代码</th><th>简称</th><th>状态</th><th>风险标识</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">04233.HK</td><td>HKGB 3.5 2033</td><td>交易中</td><td>无</td>
+                  <td class="action-cell">
+                    <button class="btn btn-outline">下架</button>
+                    <button class="btn btn-warning" style="background:var(--status-pending);color:#fff">暂停交易</button>
+                    <button class="btn btn-danger">标记风险</button>
+                  </td>
+                </tr>
+                <tr><td class="mono">WEBBOND-01</td><td>RWA-TEST 5.0</td><td>已暂停</td><td><span class="badge error">违约风险</span></td>
+                  <td class="action-cell">
+                    <button class="btn btn-success">恢复交易</button>
+                    <button class="btn btn-outline">强制下架</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- F034, F035: 全局规则与合规风控配置 -->
+      <div id="tab-rules" class="dashboard">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ 交易基础规则配置</div><button class="btn btn-primary">保存修改</button></div>
+            <div class="form-group"><label>最小报价单位 (增量)</label><input type="text" class="form-control mono" value="100,000 HKD"></div>
+            <div class="form-group"><label>买方 RFQ 超时时间 (默认)</label><input type="text" class="form-control mono" value="60 秒"></div>
+            <div class="form-group"><label>清算周期 (传统债券)</label>
+              <select class="form-control"><option>T+0</option><option>T+1</option><option selected>T+2</option></select>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">🛡️ 合规风控阈值配置</div><button class="btn btn-primary">保存修改</button></div>
+            <div class="form-group"><label>单笔大额交易预警阈值</label><input type="text" class="form-control mono" value="50,000,000 HKD"></div>
+            <div class="form-group"><label>单日机构交易限额</label><input type="text" class="form-control mono" value="500,000,000 HKD"></div>
+            <div class="form-group"><label>异常价格偏离阈值 (对比公允价)</label><input type="text" class="form-control mono" value="±0.5%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F036, F037: 系统紧急管控 -->
+      <div id="tab-emergency" class="dashboard">
+        <div class="card" style="border-color: var(--trade-sell);">
+          <div class="card-header"><div class="card-title" style="color: var(--trade-sell);">🚨 全局功能开关 (熔断机制)</div><span class="badge error">操作需多签授权</span></div>
+          <div class="grid-2">
+            <div style="display:flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span>暂停全站询价 (RFQ)</span><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div style="display:flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span>暂停全站报价 (Quote)</span><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div style="display:flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span>暂停全站交收与清算</span><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div style="display:flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span>暂停链上合约交互 (Web3)</span><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🚫 单机构 / 单券定向封禁</div></div>
+          <div class="grid-2">
+            <div>
+              <div class="form-group"><label>输入机构代码/名称进行限制</label><input type="text" class="form-control" placeholder="例如: INST-882"></div>
+              <div class="checkbox-group" style="margin-bottom:12px;">
+                <label><input type="checkbox"> 限制询价</label>
+                <label><input type="checkbox"> 限制报价</label>
+                <label><input type="checkbox"> 限制提现</label>
+              </div>
+              <button class="btn btn-danger">执行机构封禁</button>
+            </div>
+            <div>
+              <div class="form-group"><label>输入债券代码进行限制</label><input type="text" class="form-control" placeholder="例如: 04233.HK"></div>
+              <div class="checkbox-group" style="margin-bottom:12px;">
+                <label><input type="checkbox" checked> 限制买入</label>
+                <label><input type="checkbox" checked> 限制卖出</label>
+              </div>
+              <button class="btn btn-danger">执行单券封禁</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F038, F039, F040: 多签钱包管理 -->
+      <div id="tab-multisig" class="dashboard">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">🔐 平台多签钱包配置</div><button class="btn btn-outline">修改配置</button></div>
+            <div class="form-group"><label>治理合约地址</label><div class="form-control mono">0x8a92...F19A</div></div>
+            <div class="form-group"><label>当前多签阈值</label><div class="form-control mono">3 / 5 (需3人签名生效)</div></div>
+            <div class="form-group"><label>授权签名人 (Signers)</label>
+              <ul style="list-style:none; font-family:monospace; color:var(--text-muted); line-height:1.8;">
+                <li>1. 0x11... (Admin-CEO)</li><li>2. 0x22... (Admin-Compliance)</li><li>3. 0x33... (Admin-Risk)</li>
+                <li>4. 0x44... (Admin-Tech)</li><li>5. 0x55... (Admin-Audit)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">✍️ 待签名任务中心</div></div>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>任务类型</th><th>内容</th><th>进度</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr><td>发行审批</td><td>TENCENT 4.0 2028</td><td><span style="color:var(--status-pending)">2/3</span></td><td><button class="btn btn-primary">签名授权</button></td></tr>
+                  <tr><td>系统开关</td><td>暂停链上合约交互</td><td><span style="color:var(--trade-sell)">0/3</span></td><td><button class="btn btn-primary">签名授权</button></td></tr>
+                  <tr><td>合约升级</td><td>Update Settlement v2</td><td><span style="color:var(--trade-buy)">3/3</span></td><td><span class="badge health">已执行</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F041, F042: 机构准入治理 -->
+      <div id="tab-inst" class="dashboard">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏦 机构准入 KYC/BP 终审</div></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>机构名称</th><th>角色申请</th><th>SFC 牌照类型</th><th>合规初审</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td>Jane Street HK</td><td>做市商</td><td>Type 1, 4</td><td><span class="text-success">通过</span></td>
+                  <td class="action-cell"><button class="btn btn-success">终审通过</button><button class="btn btn-danger">驳回</button></td>
+                </tr>
+                <tr><td>Fidelity Int.</td><td>买方</td><td>Type 9</td><td><span class="text-success">通过</span></td>
+                  <td class="action-cell"><button class="btn btn-success">终审通过</button><button class="btn btn-danger">驳回</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔑 机构角色与权限分配</div></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>机构名称</th><th>当前角色</th><th>权限分配 (实时生效)</th></tr></thead>
+              <tbody>
+                <tr><td>中银香港</td><td>做市商</td>
+                  <td>
+                    <div class="checkbox-group">
+                      <label><input type="checkbox" checked> 交易权限</label>
+                      <label><input type="checkbox" checked> 报价权限</label>
+                      <label><input type="checkbox"> 发行权限</label>
+                    </div>
+                  </td>
+                </tr>
+                <tr><td>华夏基金</td><td>买方</td>
+                  <td>
+                    <div class="checkbox-group">
+                      <label><input type="checkbox" checked> 交易权限</label>
+                      <label><input type="checkbox" disabled> 报价权限</label>
+                      <label><input type="checkbox" checked> 兑付权限</label>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- F043, F044: 操作审计与数据对账 -->
+      <div id="tab-audit" class="dashboard">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 平台数据对账中心 (T-1)</div>
+            <button class="btn btn-primary">手动触发全局对账</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>对账维度</th><th>对账周期</th><th>数据源 (内部 vs 外部)</th><th>核对结果</th><th>差异/备注</th></tr></thead>
+              <tbody>
+                <tr><td>资金对账 (HKD)</td><td>每日 18:00</td><td>平台账本 vs 渣打托管户</td><td><span class="badge health">一致</span></td><td>无差异</td></tr>
+                <tr><td>债券持仓对账</td><td>每日 18:00</td><td>平台账本 vs CCASS</td><td><span class="badge health">一致</span></td><td>无差异</td></tr>
+                <tr><td>Web3 链上一致性</td><td>实时</td><td>平台账本 vs Ethereum RPC</td><td><span class="badge error">异常</span></td><td>TRD-1102 链上延迟，需重试</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔍 全平台操作审计日志 (不可篡改)</div>
+            <button class="btn btn-outline">导出日志 (CSV)</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>时间</th><th>操作账号 / 多签地址</th><th>动作模块</th><th>操作详情</th><th>IP/Hash</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">2024-04-13 14:20</td><td>Admin-Compliance</td><td>机构准入</td><td>终审通过 [Jane Street HK] 做市商资质</td><td class="mono">192.168.1.10</td></tr>
+                <tr><td class="mono">2024-04-13 11:05</td><td>Multisig (0x8a...1A)</td><td>债券审批</td><td>多签执行通过：发行 [TENCENT 4.0 2028]</td><td class="mono">Tx: 0xdef1...9a</td></tr>
+                <tr><td class="mono">2024-04-13 09:30</td><td>Admin-Risk</td><td>合规规则</td><td>修改 [单笔大额预警阈值] 为 50M HKD</td><td class="mono">192.168.1.12</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      function switchTab(tabId, element) {
+        // Hide all tabs
+        document.querySelectorAll('.dashboard').forEach(el => el.classList.remove('active'));
+        // Remove active class from all nav items
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+        // Show selected tab
+        document.getElementById(tabId).classList.add('active');
+        // Set active class on clicked nav item
+        element.classList.add('active');
+      }
+    </script>
+  </body>
+</html>
