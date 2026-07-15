@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HK RFQ Market - 债券发行与登记</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #131a28;
+      --bg-surface-hover: #1c263b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --accent-purple: #8b5cf6;
+      --trade-buy: #10b981;
+      --trade-sell: #ef4444;
+      --border-color: #1e293b;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --status-pending: #f59e0b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter",-apple-system,sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      overflow-y: auto;
+      letter-spacing: 1px;
+    }
+
+    .mono {font-family: "JetBrains Mono", monospace;}
+    .sidebar {
+      width: 240px;min-width: 240px;flex-shrink: 0;
+      background-color: var(--bg-surface);border-right: 1px solid var(--border-color);
+      display: flex;flex-direction: column;padding: 20px 0;
+    }
+    .logo {
+      padding: 0 24px 24px;font-size: 1.25rem;font-weight: 700;
+      color: var(--accent-blue);border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;display: flex;align-items: center;gap: 10px;
+    }
+
+    /* 主导航样式 */
+    .nav-item {
+      padding: 12px 24px;color: var(--text-muted);text-decoration: none;
+      display: flex;align-items: center;justify-content: space-between;
+      gap: 12px;transition: all 0.2s;cursor: pointer;
+    }
+    .nav-item:hover,.nav-item.active {
+      color: var(--text-main);background-color: rgba(59, 130, 246, 0.1);
+      border-right: 3px solid var(--accent-blue);
+    }
+    .nav-item svg {
+      width: 16px;height: 16px;transition: transform 0.2s;
+    }
+    .nav-item svg.rotate {
+      transform: rotate(90deg);
+    }
+
+    /* 二级导航样式 */
+    .sub-nav {
+      display: none;flex-direction: column;
+      background-color: var(--bg-base);
+    }
+    .sub-nav.show {
+      display: flex;
+    }
+    .sub-nav-item {
+      padding: 10px 24px 10px 40px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .sub-nav-item:hover, .sub-nav-item.active {
+      color: var(--text-main);
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .main-content {flex: 1;display: flex;flex-direction: column;overflow-y: auto;}
+    .header {
+      height: 64px;border-bottom: 1px solid var(--border-color);
+      display: flex;align-items: center;justify-content: space-between;
+      padding: 0 32px;background-color: rgba(19, 26, 40, 0.8);
+      backdrop-filter: blur(8px);position: sticky;top: 0;z-index: 10;
+    }
+    .system-status {display: flex;gap: 16px;font-size: 1.1rem;align-items: center;}
+    .badge {
+      padding: 6px 12px;border-radius: 6px;font-size: 1.1rem;
+      font-weight: 600;white-space: nowrap;
+    }
+    .badge.compliance {background: rgba(16, 185, 129, 0.2);color: var(--trade-buy);border: 1px solid var(--trade-buy);}
+    .badge.web3 {background: rgba(139, 92, 240, 0.2);color: #a78bfa;border: 1px solid var(--accent-purple);}
+    .badge.pending {background: rgba(245, 158, 11, 0.2);color: #f59e0b;border: 1px solid #f59e0b;}
+    .badge.success {background: rgba(16, 185, 129, 0.2);color: var(--trade-buy);border: 1px solid var(--trade-buy);}
+
+    .dashboard-flex {padding: 48px 32px 32px;display: flex;flex-direction: column;gap: 24px;max-width: 2400px;margin: 0 auto;width: 100%;}
+    .stats-grid {display: grid;grid-template-columns: repeat(4, 1fr);gap: 16px;}
+    .stat-card {background-color: var(--bg-surface);border: 1px solid var(--border-color);border-radius: var(--radius-md);padding: 16px;}
+    .stat-label {font-size: 0.75rem;color: var(--text-muted);margin-bottom: 8px;}
+    .stat-value {font-size: 1.5rem;font-weight: 700;color: var(--text-main);}
+
+    /* 内容块默认隐藏 */
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+
+    .card {
+      background-color: var(--bg-surface);border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .card-header {margin-bottom: 20px;display: flex;justify-content: space-between;align-items: center;}
+    .card-title {font-size: 1.125rem;color: var(--text-main);font-weight: 600;}
+
+    .table-container {width: 100%;overflow-x: auto;}
+    table {width: 100%;border-collapse: collapse;text-align: left;}
+    th {padding: 12px 16px;font-size: 0.75rem;text-transform: uppercase;color: var(--text-muted);border-bottom: 1px solid var(--border-color);font-weight: 600;}
+    td {padding: 16px;border-bottom: 1px solid var(--border-color);font-size: 0.875rem;}
+    tr:hover td {background-color: var(--bg-surface-hover);}
+
+    .btn-outline {
+      padding: 6px 12px;border: 1px solid var(--accent-blue);border-radius: 4px;
+      cursor: pointer;font-size: 0.875rem;background-color: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);font-weight: 500;transition: all 0.2s;
+    }
+    .btn-outline:hover {background-color: var(--accent-blue);color: white;}
+
+    /* 分页导航 - 仅左右箭头 */
+    .pagination {
+      display: flex;justify-content: center;align-items: center;
+      gap: 6px;margin: 20px 0;flex-wrap: wrap;
+    }
+    .page-btn {
+      width: 36px;height: 36px;display: flex;align-items: center;justify-content: center;
+      border-radius: var(--radius-md);border: 1px solid var(--border-color);
+      background-color: var(--bg-surface);color: var(--text-main);
+      cursor: pointer;transition: all 0.2s;font-size: 0.875rem;
+    }
+    .page-btn:hover:not(.active):not(:disabled) {
+      background-color: var(--bg-surface-hover);border-color: var(--accent-blue);
+    }
+    .page-btn.active {background-color: var(--accent-blue);border-color: var(--accent-blue);color: white;}
+    .page-btn:disabled {opacity: 0.5;cursor: not-allowed;}
+    .page-info {color: var(--text-muted);font-size: 0.875rem;padding: 0 10px;}
+
+    /* 进度步骤样式 */
+    .progress-step {display: flex;align-items: flex-start;margin-bottom: 16px;position: relative;}
+    .progress-step:last-child {margin-bottom: 0;}
+    .step-circle {
+      width: 24px;height: 24px;border-radius: 50%;background-color: var(--bg-surface-hover);
+      display: flex;align-items: center;justify-content: center;font-size: 0.75rem;
+      color: var(--text-muted);border: 1px solid var(--border-color);margin-right: 12px;flex-shrink: 0;
+    }
+    .step-circle.active {background-color: rgba(59, 130, 246, 0.2);color: var(--accent-blue);border-color: var(--accent-blue);}
+    .step-circle.done {background-color: rgba(16, 185, 129, 0.2);color: var(--trade-buy);border-color: var(--trade-buy);}
+    .step-content {flex: 1;}
+    .step-title {font-size: 0.875rem;font-weight: 500;color: var(--text-main);}
+    .step-desc {font-size: 0.75rem;color: var(--text-muted);margin-top: 4px;}
+    .step-time {font-size: 0.7rem;color: var(--text-muted);margin-top: 2px;}
+    .step-line {width: 2px;height: 32px;background-color: var(--border-color);margin-left: 11px;position: absolute;top: 24px;left: 0;z-index: 1;}
+    .progress-step:last-child .step-line {display: none;}
+
+    /* 分页数据隐藏 */
+    .page-data {display: none;}
+    .page-data.active {display: table-row-group;}
+
+    /* 详情弹窗样式 */
+    .modal-overlay {
+      position: fixed;top: 0;left: 0;right: 0;bottom: 0;
+      background-color: rgba(0,0,0,0.7);z-index: 999;
+      display: none;align-items: center;justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background-color: var(--bg-surface);border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);width: 90%;max-width: 700px;
+      padding: 32px;position: relative;max-height: 80vh;overflow-y: auto;
+    }
+    .modal-close {
+      position: absolute;top: 20px;right: 20px;
+      width: 32px;height: 32px;border-radius: 50%;
+      background-color: var(--bg-base);border: 1px solid var(--border-color);
+      color: var(--text-main);font-size: 1rem;cursor: pointer;
+      display: flex;align-items: center;justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover {background-color: var(--trade-sell);border-color: var(--trade-sell);color: white;}
+    .modal-title {font-size: 1.5rem;margin-bottom: 24px;color: var(--text-main);}
+    .modal-info {margin-bottom: 20px;line-height: 1.6;}
+    .modal-info p {margin-bottom: 8px;color: var(--text-muted);}
+    .modal-info strong {color: var(--text-main);}
+    .modal-progress {margin-top: 24px;}
+  </style>
+</head>
+<body>
+  <!-- 侧边栏 - 二级导航重构 -->
+  <aside class="sidebar">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      </svg>HK-RFQ Pro
+    </div>
+    <div style="flex:1">
+      <a href="发行人.html" class="nav-item">📊 发行人工作台</a>
+      
+      <!-- 父菜单：债券发行与登记（带二级下拉） -->
+      <div class="nav-item active" id="parent-nav">
+        <span>📝 债券发行与登记</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+      <!-- 二级导航 -->
+      <div class="sub-nav show" id="sub-nav">
+        <div class="sub-nav-item active" onclick="switchContent('ongoing')">发行登记订单</div>
+        <div class="sub-nav-item" onclick="switchContent('completed')">近期登记订单</div>
+      </div>
+
+      <a href="发行人二级市场监控.html" class="nav-item">📈 二级市场监控</a>
+      <a href="票息兑付管理.html" class="nav-item">💰 票息兑付管理</a>
+      <div class="nav-item">🌐 RWA 资产通证化</div>
+    </div>
+    <div class="nav-item" onclick="window.location.href='登录注册.html'" style="margin-top:auto;color:var(--trade-sell);border-top:1px solid var(--border-color);padding-top:16px">
+      🚪 退出账号 (Logout)
+    </div>
+  </aside>
+
+  <!-- 主内容 -->
+  <main class="main-content">
+    <header class="header">
+      <h2 style="font-size:1.8rem">Bond Issuance & Registration</h2>
+      <div class="system-status">
+        <div class="badge compliance">✓ SFC 监管合规</div>
+        <div class="badge web3">⬡ CMU 接口正常</div>
+        <div id="clock" style="color:var(--text-muted)">00:00:00 HKT</div>
+      </div>
+    </header>
+
+    <div class="dashboard-flex">
+      <!-- 数据统计 -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">待处理发行申请</div><div class="stat-value mono">100</div></div>
+        <div class="stat-card"><div class="stat-label">本月已完成登记</div><div class="stat-value mono">100</div></div>
+        <div class="stat-card"><div class="stat-label">登记总规模</div><div class="stat-value mono">520,000M</div></div>
+        <div class="stat-card"><div class="stat-label">平均审批时效</div><div class="stat-value mono">2.5 Days</div></div>
+      </div>
+
+      <!-- 进行中的发行与登记 - 默认显示 -->
+      <div class="content-section active" id="ongoing-content">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">进行中的发行与登记</div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>申请编号</th><th>债券名称</th><th>规模</th><th>进度</th><th>更新时间</th><th>操作</th></tr>
+              </thead>
+              <tbody id="ongoing-page-1" class="page-data active">
+                <tr><td class="mono">ISN-2024-081</td><td>HKGB 3.8 10/29<br>港元国债</td><td class="mono">10,000M</td><td><span class="badge pending">等待CMU</span></td><td>2024-10-12</td><td><button class="btn-outline" onclick="openDetail('ongoing',1)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-082</td><td>HKG-RWA-02<br>链上绿债</td><td class="mono">1,500M</td><td><span class="badge pending">合约部署</span></td><td>2024-10-14</td><td><button class="btn-outline" onclick="openDetail('ongoing',2)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-083</td><td>HKGB 4.0 11/30<br>港元国债</td><td class="mono">8,000M</td><td><span class="badge pending">SFC审核</span></td><td>2024-10-13</td><td><button class="btn-outline" onclick="openDetail('ongoing',3)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-084</td><td>HKG-RWA-04<br>链上绿债</td><td class="mono">2,500M</td><td><span class="badge pending">资产确权</span></td><td>2024-10-15</td><td><button class="btn-outline" onclick="openDetail('ongoing',4)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-085</td><td>HKGB 3.5 09/29<br>港元国债</td><td class="mono">12,000M</td><td><span class="badge pending">CMU确认</span></td><td>2024-10-16</td><td><button class="btn-outline" onclick="openDetail('ongoing',5)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-086</td><td>HK-CORP-01<br>企业债</td><td class="mono">5,000M</td><td><span class="badge pending">材料审核</span></td><td>2024-10-17</td><td><button class="btn-outline" onclick="openDetail('ongoing',6)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-087</td><td>HKGB 4.2 12/30<br>港元国债</td><td class="mono">9,000M</td><td><span class="badge pending">发行备案</span></td><td>2024-10-18</td><td><button class="btn-outline" onclick="openDetail('ongoing',7)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-088</td><td>HKG-RWA-06<br>链上绿债</td><td class="mono">3,000M</td><td><span class="badge pending">合约审计</span></td><td>2024-10-19</td><td><button class="btn-outline" onclick="openDetail('ongoing',8)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-089</td><td>HK-CORP-02<br>企业债</td><td class="mono">4,000M</td><td><span class="badge pending">合规审查</span></td><td>2024-10-20</td><td><button class="btn-outline" onclick="openDetail('ongoing',9)">详情</button></td></tr>
+                <tr><td class="mono">ISN-2024-090</td><td>HKGB 3.3 08/29<br>港元国债</td><td class="mono">11,000M</td><td><span class="badge pending">等待上架</span></td><td>2024-10-21</td><td><button class="btn-outline" onclick="openDetail('ongoing',10)">详情</button></td></tr>
+              </tbody>
+              <tbody id="ongoing-page-2" class="page-data"></tbody>
+              <tbody id="ongoing-page-3" class="page-data"></tbody>
+              <tbody id="ongoing-page-4" class="page-data"></tbody>
+              <tbody id="ongoing-page-5" class="page-data"></tbody>
+              <tbody id="ongoing-page-6" class="page-data"></tbody>
+              <tbody id="ongoing-page-7" class="page-data"></tbody>
+              <tbody id="ongoing-page-8" class="page-data"></tbody>
+              <tbody id="ongoing-page-9" class="page-data"></tbody>
+              <tbody id="ongoing-page-10" class="page-data"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination-ongoing">
+            <button class="page-btn" id="prev-on" onclick="prevPage('ongoing')">&lt;</button>
+            <button class="page-btn active" onclick="changePage('ongoing',1)">1</button>
+            <button class="page-btn" onclick="changePage('ongoing',2)">2</button>
+            <button class="page-btn" onclick="changePage('ongoing',3)">3</button>
+            <button class="page-btn" onclick="changePage('ongoing',4)">4</button>
+            <button class="page-btn" onclick="changePage('ongoing',5)">5</button>
+            <button class="page-btn" onclick="changePage('ongoing',6)">6</button>
+            <button class="page-btn" onclick="changePage('ongoing',7)">7</button>
+            <button class="page-btn" onclick="changePage('ongoing',8)">8</button>
+            <button class="page-btn" onclick="changePage('ongoing',9)">9</button>
+            <button class="page-btn" onclick="changePage('ongoing',10)">10</button>
+            <button class="page-btn" id="next-on" onclick="nextPage('ongoing')">&gt;</button>
+            <span class="page-info">共 10 页</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 近期登记完成记录 - 默认隐藏 -->
+      <div class="content-section" id="completed-content">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">近期登记完成记录</div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>ISIN代码</th><th>债券简称</th><th>发行日</th><th>结算通道</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody id="completed-page-1" class="page-data active">
+                <tr><td class="mono">HK0000845321</td><td>HKGB 3.2 08/28</td><td>2023-08-15</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',1)">进度</button></td></tr>
+                <tr><td class="mono">HK0000983112</td><td>HKGB 2.5 05/26</td><td>2023-05-20</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',2)">进度</button></td></tr>
+                <tr><td class="mono">HK0001022333</td><td>HK-CORP 4.0 12/30</td><td>2023-12-10</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',3)">进度</button></td></tr>
+                <tr><td class="mono">HK0001100444</td><td>HK-RWA 3.5 06/27</td><td>2024-06-18</td><td>双重登记</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',4)">进度</button></td></tr>
+                <tr><td class="mono">HK0001156789</td><td>HKGB 3.0 07/27</td><td>2024-07-20</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',5)">进度</button></td></tr>
+                <tr><td class="mono">HK0001201122</td><td>HK-CORP 3.8 09/29</td><td>2024-09-10</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',6)">进度</button></td></tr>
+                <tr><td class="mono">HK0001256781</td><td>HK-RWA 4.0 10/30</td><td>2024-10-05</td><td>双重登记</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',7)">进度</button></td></tr>
+                <tr><td class="mono">HK0001302233</td><td>HKGB 2.8 06/26</td><td>2023-06-15</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',8)">进度</button></td></tr>
+                <tr><td class="mono">HK0001357890</td><td>HK-CORP 4.2 11/30</td><td>2024-11-02</td><td>CMU</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',9)">进度</button></td></tr>
+                <tr><td class="mono">HK0001401234</td><td>HK-RWA 3.2 08/28</td><td>2024-08-22</td><td>双重登记</td><td><span class="badge success">完成</span></td><td><button class="btn-outline" onclick="openDetail('completed',10)">进度</button></td></tr>
+              </tbody>
+              <tbody id="completed-page-2" class="page-data"></tbody>
+              <tbody id="completed-page-3" class="page-data"></tbody>
+              <tbody id="completed-page-4" class="page-data"></tbody>
+              <tbody id="completed-page-5" class="page-data"></tbody>
+              <tbody id="completed-page-6" class="page-data"></tbody>
+              <tbody id="completed-page-7" class="page-data"></tbody>
+              <tbody id="completed-page-8" class="page-data"></tbody>
+              <tbody id="completed-page-9" class="page-data"></tbody>
+              <tbody id="completed-page-10" class="page-data"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination-completed">
+            <button class="page-btn" id="prev-com" onclick="prevPage('completed')">&lt;</button>
+            <button class="page-btn active" onclick="changePage('completed',1)">1</button>
+            <button class="page-btn" onclick="changePage('completed',2)">2</button>
+            <button class="page-btn" onclick="changePage('completed',3)">3</button>
+            <button class="page-btn" onclick="changePage('completed',4)">4</button>
+            <button class="page-btn" onclick="changePage('completed',5)">5</button>
+            <button class="page-btn" onclick="changePage('completed',6)">6</button>
+            <button class="page-btn" onclick="changePage('completed',7)">7</button>
+            <button class="page-btn" onclick="changePage('completed',8)">8</button>
+            <button class="page-btn" onclick="changePage('completed',9)">9</button>
+            <button class="page-btn" onclick="changePage('completed',10)">10</button>
+            <button class="page-btn" id="next-com" onclick="nextPage('completed')">&gt;</button>
+            <span class="page-info">共 10 页</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 详情弹窗 -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeDetail()">&times;</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // 实时时钟
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").textContent = now.toLocaleTimeString("en-US",{hour12:false}) + " HKT";
+    }
+    setInterval(updateClock,1000);updateClock();
+
+    // 二级导航展开/折叠
+    document.getElementById('parent-nav').onclick = function() {
+      const subNav = document.getElementById('sub-nav');
+      const arrow = this.querySelector('svg');
+      subNav.classList.toggle('show');
+      arrow.classList.toggle('rotate');
+    };
+
+    // 切换内容（二级导航点击）
+    function switchContent(type) {
+      // 切换二级菜单高亮
+      document.querySelectorAll('.sub-nav-item').forEach(item => item.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // 切换内容显示
+      document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(`${type}-content`).classList.add('active');
+    }
+
+    // 分页配置
+    const TOTAL_PAGES = 10;
+
+    // 切换页码
+    function changePage(type, pageNum) {
+      document.querySelectorAll(`[id^="${type}-page-"]`).forEach(item => item.classList.remove("active"));
+      document.getElementById(`${type}-page-${pageNum}`).classList.add("active");
+      
+      document.querySelectorAll(`#pagination-${type} .page-btn`).forEach(btn => {
+        btn.classList.remove("active");
+        if(btn.textContent == pageNum) btn.classList.add("active");
+      });
+
+      const prev = document.getElementById(`prev-${type.split('-')[0]}`);
+      const next = document.getElementById(`next-${type.split('-')[0]}`);
+      if(prev) prev.disabled = pageNum === 1;
+      if(next) next.disabled = pageNum === TOTAL_PAGES;
+    }
+
+    // 左右翻页
+    function prevPage(type) {
+      const current = parseInt(document.querySelector(`#pagination-${type} .page-btn.active`).textContent);
+      if(current > 1) changePage(type, current - 1);
+    }
+    function nextPage(type) {
+      const current = parseInt(document.querySelector(`#pagination-${type} .page-btn.active`).textContent);
+      if(current < TOTAL_PAGES) changePage(type, current + 1);
+    }
+
+    // 详情弹窗
+    function openDetail(type, index) {
+      const modal = document.getElementById('detailModal');
+      const modalBody = document.getElementById('modalBody');
+      let html = '';
+
+      if(type === 'ongoing'){
+        html = `<h3 class="modal-title">发行申请详情</h3>
+        <div class="modal-info">
+          <p><strong>状态：</strong><span class="badge pending">处理中</span></p>
+          <p><strong>通道：</strong>CMU / 链上登记</p>
+        </div>
+        <div class="modal-progress">
+          <div class="progress-step"><div class="step-circle done">1</div><div class="step-line"></div><div class="step-content">申请提交</div></div>
+          <div class="progress-step"><div class="step-circle active">2</div><div class="step-content">审核中</div></div>
+        </div>`;
+      }
+
+      if(type === 'completed'){
+        html = `<h3 class="modal-title">登记完成详情</h3>
+        <div class="modal-info">
+          <p><strong>状态：</strong><span class="badge success">已完成</span></p>
+          <p><strong>通道：</strong>CMU / 双重登记</p>
+        </div>
+        <div class="modal-progress">
+          <div class="progress-step"><div class="step-circle done">1</div><div class="step-line"></div><div class="step-content">申请提交</div></div>
+          <div class="progress-step"><div class="step-circle done">2</div><div class="step-line"></div><div class="step-content">合规审核</div></div>
+          <div class="progress-step"><div class="step-circle done">3</div><div class="step-line"></div><div class="step-content">CMU登记</div></div>
+          <div class="progress-step"><div class="step-circle done">4</div><div class="step-content">发行完成</div></div>
+        </div>`;
+      }
+
+      modalBody.innerHTML = html;
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 关闭弹窗
+    function closeDetail() {
+      document.getElementById('detailModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    document.getElementById('detailModal').addEventListener('click', e => e.target === this && closeDetail());
+
+    // 自动填充10页数据
+    window.onload = function(){
+      for(let i=2;i<=10;i++){
+        document.getElementById(`ongoing-page-${i}`).innerHTML = document.getElementById('ongoing-page-1').innerHTML;
+        document.getElementById(`completed-page-${i}`).innerHTML = document.getElementById('completed-page-1').innerHTML;
+      }
+    }
+  </script>
+</body>
+</html>

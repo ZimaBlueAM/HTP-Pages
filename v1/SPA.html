@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK RFQ Market - 综合系统主页</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0e17;
+            --bg-surface: #131a28;
+            --bg-surface-hover: #1c263b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --border-color: #1e293b;
+            --sidebar-width: 260px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Inter", -apple-system, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-header .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+        .menu-group {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .menu-title {
+            padding: 4px 24px 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        .menu-list {
+            list-style: none;
+        }
+        .menu-list a {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .menu-list a:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+        .menu-list a.active {
+            background-color: var(--bg-surface-hover);
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+        .menu-list a.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--accent-blue);
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-base);
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-surface);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">H</div>
+            <h1>HK RFQ Market</h1>
+        </div>
+        
+        <div class="menu-group">
+            <div class="menu-title">系统通用</div>
+            <ul class="menu-list">
+                <li><a href="登录注册.html" target="content_frame" class="active">🔑 登录 / 注册</a></li>
+                <li><a href="平台方.html" target="content_frame">⚙️ 平台运营管理</a></li>
+            </ul>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-title">发行人 (Issuer)</div>
+            <ul class="menu-list">
+                <li><a href="发行人.html" target="content_frame">📊 发行人工作台</a></li>
+                <li><a href="债券发行与登记.html" target="content_frame">📝 债券发行与登记</a></li>
+                <li><a href="发行人二级市场监控.html" target="content_frame">📈 二级市场监控</a></li>
+                <li><a href="票息兑付管理.html" target="content_frame">💰 票息兑付管理</a></li>
+                <li><a href="发行人RWA资产通证化.html" target="content_frame">🌐 RWA资产通证化</a></li>
+            </ul>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-title">做市商 (Market Maker)</div>
+            <ul class="menu-list">
+                <li><a href="做市商.html" target="content_frame">📈 做市商工作台</a></li>
+                <li><a href="做市商-报价与订单.html" target="content_frame">🔄 报价与订单管理</a></li>
+                <li><a href="做市商-债券持仓.html" target="content_frame">💼 债券持仓管理</a></li>
+                <li><a href="做市商-认购发行债券.html" target="content_frame">🛒 认购新发债券</a></li>
+                <li><a href="做市商-个人中心.html" target="content_frame">👤 个人中心/合规</a></li>
+            </ul>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-title">买方 (Buyer)</div>
+            <ul class="menu-list">
+                <li><a href="买方.html" target="content_frame">💰 买方工作台</a></li>
+                <li><a href="买方交易记录.html" target="content_frame">📜 历史交易记录</a></li>
+                <li><a href="买方结算与清算.html" target="content_frame">✅ 结算与清算</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <iframe name="content_frame" src="登录注册.html"></iframe>
+    </div>
+
+    <script>
+        const links = document.querySelectorAll('.menu-list a');
+        links.forEach(link => {
+            link.addEventListener('click', function() {
+                links.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HK RFQ Market - 项目页面导航大全</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0e17;
+        --bg-surface: #131a28;
+        --bg-surface-hover: #1c263b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --border-color: #1e293b;
+        --radius-lg: 12px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        padding: 40px;
+        display: flex;
+        justify-content: center;
+      }
+      .container {
+        max-width: 1000px;
+        width: 100%;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .header h1 {
+        font-size: 2rem;
+        color: var(--accent-blue);
+        margin-bottom: 10px;
+      }
+      .header p {
+        color: var(--text-muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+      }
+      .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-main);
+      }
+      .link-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .link-list a {
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 10px 16px;
+        background-color: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        display: block;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+      }
+      .link-list a:hover {
+        background-color: var(--bg-surface-hover);
+        color: var(--accent-blue);
+        border-color: var(--border-color);
+        transform: translateX(4px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>HK RFQ Market</h1>
+        <p>前端原型系统 - 页面导航地图 (Page Navigation Index)</p>
+      </div>
+
+      <div class="grid">
+        <!-- Common -->
+        <div class="card">
+          <div class="card-title">🔐 通用与入口</div>
+          <ul class="link-list">
+            <li><a href="登录注册.html">登录 / 注册入口</a></li>
+          </ul>
+        </div>
+
+        <!-- 发行人 -->
+        <div class="card" style="border-top: 4px solid var(--accent-purple)">
+          <div class="card-title">📊 发行人 (Issuer)</div>
+          <ul class="link-list">
+            <li><a href="发行人.html">发行人工作台 (主页)</a></li>
+            <li><a href="债券发行与登记.html">债券发行与登记</a></li>
+            <li><a href="发行人二级市场监控.html">二级市场监控</a></li>
+            <li><a href="票息兑付管理.html">票息兑付管理</a></li>
+          </ul>
+        </div>
+
+        <!-- 做市商 -->
+        <div class="card" style="border-top: 4px solid var(--accent-blue)">
+          <div class="card-title">📈 做市商 (Market Maker)</div>
+          <ul class="link-list">
+            <li><a href="做市商.html">做市商工作台 (主页)</a></li>
+            <li><a href="做市商-报价与订单.html">报价与订单管理</a></li>
+            <li><a href="做市商-债券持仓.html">债券持仓管理</a></li>
+            <li><a href="做市商-认购发行债券.html">认购新发债券</a></li>
+            <li><a href="做市商-个人中心.html">个人中心/合规</a></li>
+          </ul>
+        </div>
+
+        <!-- 买方 -->
+        <div class="card" style="border-top: 4px solid #10b981">
+          <div class="card-title">💰 买方 (Buyer / Investor)</div>
+          <ul class="link-list">
+            <li><a href="买方.html">买方工作台 (主页)</a></li>
+            <li><a href="买方交易记录.html">历史交易记录</a></li>
+            <li><a href="买方结算与清算.html">结算与清算</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
